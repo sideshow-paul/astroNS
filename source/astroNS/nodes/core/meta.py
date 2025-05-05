@@ -94,6 +94,7 @@ class MetaNode(BaseNode):
         self.propagator_factory = {
             cls.__name__.lower(): cls for cls in Propagator.__subclasses__()
         }
+        # import pudb; pu.db
         # Select the class
         if configuration.get("propagator", None) is not None:
             properties = configuration.get("propagator", None)

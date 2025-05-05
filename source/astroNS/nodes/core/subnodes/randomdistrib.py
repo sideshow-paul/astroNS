@@ -17,13 +17,15 @@ from nodes.core.base import BaseNode
 
 class RandomDistrib(BaseNode):
     def __init__(self, env: Environment, name: str, configuration: Dict[str, Any]):
-        self.population: List[str] = [
-            item.strip()
-            for item in configuration.get("population", "MISSING").split(",")
-        ]
-        self.weights: List[float] = [
-            float(item) for item in configuration.get("weights", "MISSING").split(",")
-        ]
+        self.population: List[str] = configuration.get("population", [])
+        # [
+
+        #     for item in configuration.get("population", [])
+        # ]
+        self.weights: List[float] = configuration.get("weights", [])
+        # [
+        #     float(item) for item in configuration.get("weights", "MISSING").split(",")
+        # ]
         self.cdf_vals: List[float] = self.cdf(self.weights)
         self.generates_data_only: bool = True
         super().__init__(env, name, configuration, self.execute())
@@ -37,7 +39,7 @@ class RandomDistrib(BaseNode):
             self.result_type = str
 
         self._time_delay: Callable[[], Optional[float]] = self.setFloatFromConfig(
-            "delay", 0.01
+            "time_delay", 0.01
         )
         # this will be an on demand node..maybe
         self.env.process(self.run())
@@ -57,23 +59,28 @@ class RandomDistrib(BaseNode):
 
     def execute(self):
         # import pudb; pu.db
-        self.generates_data_only: bool = True
+        self.generates_data_only: bool = False
         delay: float = 0.0
         processing_time: float = delay
-        yield 0.0, 0.0, []
+        data_list = []
+        #yield 0.0, 0.0, []
         while True:
+            data_in = yield (delay, processing_time, data_list)
             x = random.random()
             idx = bisect.bisect(self.cdf_vals, x) - 1
             result = self.result_type(self.population[idx])
             delay = self.time_delay
             processing_time = delay
             id = uuid.uuid4()
-            data_list = [{"ID": id, "size_mbits": 1, self.result_key: result}]
+            data_in[self.result_key] = result
+
+
+            data_list = [data_in]
             print(
                 self.log_prefix(id)
                 + "random value:|{}| set to key:|{}|".format(result, self.result_key)
             )
-            yield (delay, processing_time, data_list)
+
 
     def getValue(self):
         x = random.random()

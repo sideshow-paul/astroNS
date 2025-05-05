@@ -29,3 +29,10 @@ try:
     print(msg_prefix + "Loaded FileDataSource node.")
 except ModuleNotFoundError as e:
     raise e
+
+try:
+    from .pulsarSource import PulsarTopicSource
+    print(msg_prefix + "Loaded PulsarTopicSource node.")
+
+except ModuleNotFoundError as e:
+    raise e

@@ -62,7 +62,7 @@ def runSim(
 
     #!TODO Convert to logger instead of print
     print(
-        "    %|     0.00|2020-10-22T20:58:17.862886+00:00|      CelerNet     |[   Simulator   ]|00000000-0000-0000-000000000000|Loaded |{}| total nodes".format(
+        "    %|     0.00|2020-10-22T20:58:17.862886+00:00|      astroNS     |[   Simulator   ]|00000000-0000-0000-000000000000|Loaded |{}| total nodes".format(
             len(network_nodes)
         )
     )
@@ -205,14 +205,14 @@ def postprocess_network(env):
             output_sim_end_state(env, sim_end_state_file)
 
     print(
-        " 100%|{:8.2f}|{}|      CelerNet      |[   Simulator   ]|00000000-0000-0000-000000000000|Session token: {}".format(
+        " 100%|{:8.2f}|{}|      astroNS       |[   Simulator   ]|00000000-0000-0000-000000000000|Session token: {}".format(
             env.now,
             env.now_datetime().isoformat(timespec="microseconds"),
             env.this_runs_uuid,
         )
     )
     print(
-        " 100%|{:8.2f}|{}|      CelerNet      |[   Simulator   ]|00000000-0000-0000-000000000000|Done.".format(
+        " 100%|{:8.2f}|{}|      astroNS       |[   Simulator   ]|00000000-0000-0000-000000000000|Done.".format(
             env.now, env.now_datetime().isoformat(timespec="microseconds")
         )
     )
@@ -314,7 +314,7 @@ def main(
     setup_env(env, args)
 
     print(
-        "   0%|     0.00|{}|      CelerNet     |[   Simulator   ]|00000000-0000-0000-000000000000|Session token: {}".format(
+        "   0%|     0.00|{}|      astroNS      |[   Simulator   ]|00000000-0000-0000-000000000000|Session token: {}".format(
             env.start_datetime, env.this_runs_uuid
         )
     )
@@ -335,12 +335,12 @@ def main(
                 sys.stdout = sim_log
 
             print(
-                "   0%|     0.00|{}|      CelerNet     |[   Simulator   ]|00000000-0000-0000-000000000000|Using Random seed: {}".format(
+                "   0%|     0.00|{}|      astroNS      |[   Simulator   ]|00000000-0000-0000-000000000000|Using Random seed: {}".format(
                     env.start_datetime, env.seed
                 )
             )
             print(
-                "   0%|     0.00|{}|      CelerNet     |[   Simulator   ]|00000000-0000-0000-000000000000|Session token: {}".format(
+                "   0%|     0.00|{}|      astroNS      |[   Simulator   ]|00000000-0000-0000-000000000000|Session token: {}".format(
                     env.start_datetime, env.this_runs_uuid
                 )
             )
@@ -351,7 +351,7 @@ def main(
             network_nodes, env = runSim(filename, SimStop, env)
 
             print(
-                " 100%|{:8.2f}|{}|      CelerNet      |[   Simulator   ]|00000000-0000-0000-000000000000|Session token: {}".format(
+                " 100%|{:8.2f}|{}|      astroNS       |[   Simulator   ]|00000000-0000-0000-000000000000|Session token: {}".format(
                     env.now,
                     env.now_datetime().isoformat(timespec="microseconds"),
                     env.this_runs_uuid,

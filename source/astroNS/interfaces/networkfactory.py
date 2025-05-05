@@ -7,6 +7,7 @@ initial network design to be run within the tool.
 import configparser
 import simpy
 import yaml
+import json
 
 from links import *
 from links.predicates import patterns
@@ -54,7 +55,7 @@ def load_network_file(filename, env, meta_node=None):
     if filename.endswith(".json"):
         with open(filename, "r") as jsonfile:
             json_string = jsonfile.read()
-        filename.close()
+
         return load_json_string(json_string, env, meta_node)
     if filename.endswith(".yml"):
         with open(filename, "r") as ymlfile:

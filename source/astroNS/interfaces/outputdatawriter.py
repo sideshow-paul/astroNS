@@ -108,10 +108,10 @@ def output_node_stats(nodes, file_stream, write_history=False):
                 df.describe(),
                 df.agg(
                     {
-                        "data_size": sum,
+                        "data_size": "sum",
                         "delay_till_next_msg": ["sum"],
-                        "msg_wait_time": sum,
-                        "processing_time": sum,
+                        "msg_wait_time": "sum",
+                        "processing_time": "sum",
                     }
                 ),
             ],

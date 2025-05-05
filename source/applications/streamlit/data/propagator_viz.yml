@@ -6,7 +6,7 @@ DataGen:
     Spacecraft_Meta/Propagator: ~
 Spacecraft_Meta:
     type: MetaNode
-    source: './tests/propagator/spacecraft.yml'
+    source: '../applications/streamlit/data/spacecraft.yml'
     propagator:
         type: Satellite
         epoch: "2015-08-26T10:03:00.01Z"

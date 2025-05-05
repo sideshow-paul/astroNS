@@ -11,9 +11,9 @@ try:
 except ModuleNotFoundError as e:
     raise e
 
-try:
-    from .propagator import Propagator
+# try:
+#     from .propagator import Propagator
 
-    print(msg_prefix + "Loaded Propagator node.")
-except ModuleNotFoundError as e:
-    raise e
+#     print(msg_prefix + "Loaded Propagator node.")
+# except ModuleNotFoundError as e:
+#     raise e

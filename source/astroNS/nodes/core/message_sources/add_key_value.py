@@ -21,6 +21,15 @@ class AddKeyValue(BaseNode):
         self._time_delay: Callable[[], Optional[float]] = self.setFloatFromConfig(
             "time_delay", 0.0
         )
+        self.required_imports: str = "import math; import datetime;" #configuration.get('imports', "")
+        self.result_key: str       = configuration.get('result_key', name) 
+        value_fn_string: str       = "def value_fn(sim_time,msg):  " + configuration.get('def value_fn(sim_time,msg)', 'msg')
+        self.fns: Dict[str, Any] = {}
+        exec(self.required_imports, self.fns)
+        exec( value_fn_string, self.fns) 
+
+        #import pudb; pu.db
+
         self.env.process(self.run())
 
     @property
@@ -71,12 +80,34 @@ class AddKeyValue(BaseNode):
         delay: float = 0.0
         processing_time: float = delay
         data_out_list: List[Tuple] = []
+        #import pudb; pu.db
         while True:
             data_in = yield (delay, processing_time, data_out_list)
 
+            #print(data_in)
+
             if data_in:
-                msg = data_in.copy()
+                msg = data_in #.copy()
                 if (
+                        ("key" not in self.configuration)
+                    and ("value" not in self.configuration)
+                ): 
+                    #import pudb;pu.db
+                    result = (self.fns['value_fn'])( self.env.now, data_in )
+                    #print(self.log_prefix(data_in['ID']) + "Data ID |{}| arrived, set msg key |{}| to |{}|".format( data_in["ID"], self.result_key, result))
+            
+                    data_out = data_in.copy()
+                    if self.result_key != 'delay':
+                        data_out[self.result_key] = result
+                        delay = self.time_delay
+                        print(self.log_prefix(data_in['ID']) + "value:|{}| set to key: |{}|".format(result, self.result_key))
+                    else:
+                        delay = result
+                        print(self.log_prefix(data_in['ID']) + "value: |{}| set as msg delay".format(result))
+                    processing_time = delay
+                    data_out_list = [data_out]
+
+                elif (
                     self.configuration["key"] is None
                     and self.configuration["value"] is not None
                 ):
