@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: astrons
+  labels:
+    app: astrons
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: astrons
+  template:
+    metadata:
+      labels:
+        app: astrons
+    spec:
+      containers:
+        - name: astrons
+          image: astrons:latest
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
+          env:
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: PULSAR_BROKER
+              value: "pulsar-broker.pulsar.svc.cluster.local"
+            - name: PULSAR_PORT
+              value: "6650"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/source/models/Simple
+            - name: results-volume
+              mountPath: /app/Results
+      volumes:
+        - name: config-volume
+          configMap:
+            name: astrons-config
+            items:
+              - key: SimpleSensorCollectionModel.yml
+                path: SimpleSensorCollectionModel.yml
+        - name: results-volume
+          persistentVolumeClaim:
+            claimName: astrons-results-pvc
+---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: astrons
+# spec:
+#   selector:
+#     app: astrons
+#   ports:
+#   - port: 8080
+#     targetPort: 8080
+#   type: ClusterIP
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: astrons-results-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+  storageClassName: local-path

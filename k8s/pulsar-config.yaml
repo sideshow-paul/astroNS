@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pulsar-config
+  namespace: pulsar
+data:
+  # Basic Pulsar settings
+  broker.conf: |
+    # Broker settings
+    brokerServicePort=6650
+    webServicePort=8080
+
+    # Enable topic auto-creation
+    allowAutoTopicCreation=true
+    allowAutoTopicCreationType=partitioned
+    defaultNumPartitions=1
+
+    # Authentication settings (disabled for development)
+    authenticationEnabled=false
+    authorizationEnabled=false
+
+    # Persistence settings
+    managedLedgerDefaultEnsembleSize=1
+    managedLedgerDefaultWriteQuorum=1
+    managedLedgerDefaultAckQuorum=1
+
+    # Disable cluster replication for standalone mode
+    brokerDeleteInactiveTopicsEnabled=false
+
+    # Performance settings
+    defaultRetentionTimeInMinutes=1440
+    defaultRetentionSizeInMB=512
+
+  # Client settings
+  client.conf: |
+    webServiceUrl=http://localhost:8080
+    brokerServiceUrl=pulsar://localhost:6650

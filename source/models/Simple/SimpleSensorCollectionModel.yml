@@ -1,0 +1,76 @@
+DEFAULT:
+  msg_size_key: size_mbits
+  seed: 42
+
+FromQueue:
+  type: PulsarTopicSource
+  pulsar_server: pulsar://localhost:6650
+  topic_name: my-topic
+  sub_name: my-sub
+  simtime_field_name: simtime
+  poll_frequency_secs: 11.0
+  UplinkTime: ~
+
+UplinkTime:
+  type: RandomDistrib
+  population: [10, 20, 30, 40, 50, 60, 80, 90]
+  weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
+  time_delay: 1
+  result_key: uplinkTimeSecs
+  ConvertUplinkTimeToDateTime: ~
+
+ConvertUplinkTimeToDateTime:
+  type: AddKeyValue
+  result_key: UplinkTime
+  time_delay: 1
+  def value_fn(sim_time,msg): "return sim_time  + msg['uplinkTimeSecs']"
+  Quality: ~
+
+Quality:
+  type: RandomDistrib
+  population: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
+  time_delay: 1
+  results_key: Quality
+  DownlinkTime: ~
+
+DownlinkTime:
+  type: RandomDistrib
+  population: [10, 20, 30, 40, 50, 60, 80, 90]
+  weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
+  time_delay: 1
+  result_key: downlinkTimeSecs
+  ConvertDownlinkTimeToDateTime: ~
+
+ConvertDownlinkTimeToDateTime:
+  type: AddKeyValue
+  result_key: DownlinkTime
+  time_delay: 1
+  def value_fn(sim_time,msg): "return msg['UplinkTime'] + msg['downlinkTimeSecs'] "
+  ProcessingTime: ~
+
+ProcessingTime:
+  type: RandomDistrib
+  population: [10, 20, 30, 40, 50, 60, 80, 90]
+  weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
+  time_delay: 1
+  result_key: processingTimeSecs
+  ConvertProcessingTimeToDateTime: ~
+
+ConvertProcessingTimeToDateTime:
+  type: AddKeyValue
+  result_key: ProcessingTime
+  time_delay: 1
+  def value_fn(sim_time,msg): "return msg['DownlinkTime'] + msg['processingTimeSecs']"
+  ProductDelivery: ~
+
+ProductDelivery:
+  type: PulsarTopicSink
+  topic_name: sim_output
+  pulsar_server: pulsar://localhost:6650
+  time_delay: 1
+  FinalNode: ~
+
+FinalNode:
+  type: DelayTime
+  time_delay: 0

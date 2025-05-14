@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: pulsar-broker
+  namespace: pulsar
+  labels:
+    app: pulsar
+    component: broker
+spec:
+  serviceName: "pulsar-broker"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pulsar
+      component: broker
+  template:
+    metadata:
+      labels:
+        app: pulsar
+        component: broker
+    spec:
+      containers:
+        - name: pulsar
+          image: apachepulsar/pulsar:4.0.4
+          command: ["bin/pulsar", "standalone"]
+          ports:
+            - containerPort: 6650
+              name: pulsar
+            - containerPort: 8080
+              name: http
+          volumeMounts:
+            - name: data
+              mountPath: /pulsar/data
+            - name: config
+              mountPath: /pulsar/conf/broker.conf
+              subPath: broker.conf
+            - name: config
+              mountPath: /pulsar/conf/client.conf
+              subPath: client.conf
+          resources:
+            requests:
+              memory: "1Gi"
+              cpu: "500m"
+            limits:
+              memory: "2Gi"
+              cpu: "1000m"
+          env:
+            - name: PULSAR_MEM
+              value: "-Xms512m -Xmx1g"
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: pulsar-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulsar-broker
+  namespace: pulsar
+  labels:
+    app: pulsar
+spec:
+  ports:
+    - port: 6650
+      name: pulsar
+      targetPort: pulsar
+    - port: 8080
+      name: http
+      targetPort: http
+  selector:
+    app: pulsar
+    component: broker
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pulsar

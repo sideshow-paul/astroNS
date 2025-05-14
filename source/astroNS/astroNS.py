@@ -73,11 +73,11 @@ def runSim(
     ) as node_config_file:
         output_loaded_config(network_nodes, node_config_file, env)
 
-    try:
+    #try:
         # Run it
-        env.run(until=simStop)
-    except RuntimeError:
-        print("Simulation process is too slow for real time mode. Stopping.")
+    env.run(until=simStop)
+        #except RuntimeError:
+        #print("Simulation process is too slow for real time mode. Stopping.")
 
     return network_nodes, env
 
