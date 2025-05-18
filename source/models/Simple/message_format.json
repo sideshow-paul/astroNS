@@ -1,0 +1,35 @@
+
+{
+	"AssetID": "asset_id",
+	"Start": "YYYY-MM-DDTHH:mm:ss.sssZ",
+	"Stop": "YYYY-MM-DDTHH:mm:ss.sssZ",
+	"Phenomenology": "EO" | "IR" | "SAR",
+	"AimPoint": {
+		"Latitude": 99.999999, 	# Decimal Degrees
+		"Longitude": 999.999999, 	# Decimal Degrees
+		"Altitude": 9999.999999,	# meters
+	}
+}
+
+{
+	"AssetID": "asset_id",
+	"Start": "2025-05-27T00:00:00.000Z",
+	"Stop": "2025-05-27T00:00:01.000Z",
+	"Phenomenology": "EO",
+	"AimPoint": {
+		"Latitude": 99.999999, 	
+		"Longitude": 999.999999, 	
+		"Altitude": 9999.999999,	
+	},
+    "simtime": 1
+}
+
+Output from you guys (lots of room for improvement here!):
+{
+	"UplinkTime": "YYYY-MM-DDTHH:mm:ss.sssZ",
+	"DownlinkTime": "YYYY-MM-DDTHH:mm:ss.sssZ",
+	"ProcessTime": "YYYY-MM-DDTHH:mm:ss.sssZ",
+	"AccessWindowStart": "YYYY-MM-DDTHH:mm:ss.sssZ",	# ???
+	"AccessWindowEnd": "YYYY-MM-DDTHH:mm:ss.sssZ",	# ???
+	"Quality": number?
+}
