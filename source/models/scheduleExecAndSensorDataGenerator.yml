@@ -1,0 +1,62 @@
+DEFAULT:
+    msg_size_key: size_mbits
+
+SensorScheduler:
+    type: MetaNode
+    source: './AgentScheduler.yml'
+    overrides:
+        Scheduler/GroundStationRouter: ~
+
+GroundStationRouter:
+    type: MetaNode
+    source: './ToGroundStationRoutes.yml'
+    overrides:
+        GroundStation_A:
+            ScheduleUpload_A: uplink_GS_ID regex 'GS_A'
+    # GroundStation_B/ScheduleUpload_B: uplink_GS_ID regex 'GS_B'
+    # GroundStation_C/ScheduleUpload_C: uplink_GS_ID regex 'GS_C'
+
+ScheduleUpload_A:
+    type: MetaNode
+    source: './ScheduleUpload.yml'
+    AssetConstellation: ~
+
+
+# ScheduleUpload_B:
+#     type: MetaNode
+#     source: './ScheduleUpload.yml'
+#     AssetConstellation: ~
+
+# ScheduleUpload_C:
+#     type: MetaNode
+#     source: './ScheduleUpload.yml'
+#     AssetConstellation: ~
+
+
+
+AssetConstellation:
+    type: MetaNode
+    source: './constellation.yml'
+    Scenario: ~
+
+Scenario:
+    type: MetaNode
+    source: './scenario.yml'
+    SensorDataDownload: ~
+
+SensorDataDownload:
+    type: MetaNode
+    source: './SensorDataDownload.yml'
+    SensorDataProcessing: ~
+
+SensorDataProcessing:
+    type: MetaNode
+    source: './dataCenter.yml'
+    SensorProductCustomer: ~
+
+SensorProductCustomer:
+    type: MetaNode
+    source: './ProductCustomer.yml'
+    GroundStationRouter: ~
+
+

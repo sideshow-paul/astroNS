@@ -1,0 +1,15 @@
+DEFAULT:
+    msg_size_key: size_mbits
+
+Scheduler:
+    type: FileDataSource
+    file_name: "schedule.txt"
+    delimiter: ","
+    file_keys: "task_id, uplink_GS_ID, Asset_ID, downlink_GS_ID, data_processor_id, customer_id, schedule_completed_datetime, upload_datetime, sensor_on_datetime, sensor_off_datetime, downlink_time"
+
+
+
+
+
+
+

@@ -81,6 +81,60 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Deploy Pulsar Manager
+echo -e "${YELLOW}Deploying Pulsar Manager...${NC}"
+cat <<EOF | kubectl apply -f - -n pulsar
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pulsar-manager
+  labels:
+    app: pulsar
+    component: manager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pulsar
+      component: manager
+  template:
+    metadata:
+      labels:
+        app: pulsar
+        component: manager
+    spec:
+      containers:
+      - name: pulsar-manager
+        image: apachepulsar/pulsar-manager:v0.4.0
+        ports:
+        - containerPort: 9527
+        env:
+        - name: SPRING_CONFIGURATION_FILE
+          value: /pulsar-manager/pulsar-manager/application.properties
+
+EOF
+
+# Create Pulsar Manager service
+echo -e "${YELLOW}Creating Pulsar Manager service...${NC}"
+cat <<EOF | kubectl apply -f - -n pulsar
+apiVersion: v1
+kind: Service
+metadata:
+  name: pulsar-manager
+  labels:
+    app: pulsar
+    component: manager
+spec:
+  ports:
+  - port: 9527
+    name: pulsar-manager
+    targetPort: 9527
+  selector:
+    app: pulsar
+    component: manager
+  type: NodePort
+EOF
+
 # Wait for Pulsar to be ready
 echo -e "${YELLOW}Waiting for Pulsar to be ready (this may take a few minutes)...${NC}"
 kubectl wait --for=condition=ready pod -l app=pulsar,component=broker -n pulsar --timeout=600s
@@ -88,6 +142,16 @@ if [ $? -ne 0 ]; then
     echo -e "${RED}Timed out waiting for Pulsar to be ready. Please check Pulsar pods:${NC}"
     kubectl get pods -n pulsar
     echo -e "${RED}Check logs with: kubectl logs -n pulsar -l app=pulsar,component=broker${NC}"
+    exit 1
+fi
+
+# Wait for Pulsar Manager to be ready
+echo -e "${YELLOW}Waiting for Pulsar Manager to be ready...${NC}"
+kubectl wait --for=condition=ready pod -l app=pulsar,component=manager -n pulsar --timeout=300s
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Timed out waiting for Pulsar Manager to be ready. Please check Pulsar Manager pods:${NC}"
+    kubectl get pods -n pulsar -l app=pulsar,component=manager
+    echo -e "${RED}Check logs with: kubectl logs -n pulsar -l app=pulsar,component=manager${NC}"
     exit 1
 fi
 
@@ -140,3 +204,47 @@ echo -e "${YELLOW}To check the status of the deployment:${NC}"
 echo "kubectl get pods -n pulsar"
 echo "kubectl get pods"
 echo "kubectl logs -l app=astrons"
+
+# Display Pulsar Manager access information
+PULSAR_MANAGER_PORT=$(kubectl get svc pulsar-manager -n pulsar -o jsonpath='{.spec.ports[0].nodePort}')
+if [ -n "$PULSAR_MANAGER_PORT" ]; then
+    echo -e "${GREEN}Pulsar Manager UI is available at:${NC}"
+    echo -e "http://<your-node-ip>:$PULSAR_MANAGER_PORT"
+    echo -e "${YELLOW}Setting up initial admin user...${NC}"
+
+    # Wait for the Pulsar Manager API to be ready
+    echo -e "${YELLOW}Waiting for Pulsar Manager API to be ready...${NC}"
+    kubectl wait --for=condition=ready pod -l app=pulsar,component=manager -n pulsar --timeout=180s
+
+    # Create the initial admin user using CSRF token approach
+    echo -e "${YELLOW}Creating admin user for Pulsar Manager...${NC}"
+
+    # Wait a bit for the service to be fully ready
+    sleep 10
+
+    # Get CSRF token and create admin user
+    echo -e "${YELLOW}Getting CSRF token and creating admin user...${NC}"
+    CSRF_TOKEN=$(curl http://localhost:$PULSAR_MANAGER_PORT/pulsar-manager/csrf-token)
+    echo $CSRF_TOKEN
+    sleep 10
+    # Create the admin user with CSRF token
+    echo -e "${YELLOW}Creating admin user with CSRF token...${NC}"
+    curl \
+      -H 'X-XSRF-TOKEN: $CSRF_TOKEN' \
+      -H 'Cookie: XSRF-TOKEN=$CSRF_TOKEN;' \
+      -H "Content-Type: application/json" \
+      -X PUT http://localhost:$PULSAR_MANAGER_PORT/pulsar-manager/users/superuser \
+      -d '{"name": "admin", "password": "apachepulsar", "description": "Administrator", "email": "admin@example.org"}'
+
+    echo ""
+
+    echo -e "${GREEN}Pulsar Manager initial setup complete${NC}"
+    echo -e "${YELLOW}Access the Pulsar Manager UI at http://<your-node-ip>:$PULSAR_MANAGER_PORT${NC}"
+    echo -e "${YELLOW}Log in with:${NC}"
+    echo -e "  Username: admin"
+    echo -e "  Password: apachepulsar"
+    echo -e "${YELLOW}After logging in, add a new environment with these settings:${NC}"
+    echo -e "  Name: pulsar-local"
+    echo -e "  Service URL: http://pulsar-broker:8080"
+    echo -e "  Broker URL for WebSocket: ws://pulsar-broker:8080"
+fi

@@ -1,0 +1,39 @@
+
+GroundStation_router:
+    type: delaytime
+    time_delay: 1
+    Internet_to_GS_A: uplink_GS_ID regex 'GS_A'
+    # Internet_to_GS_B: uplink_GS_ID regex 'GS_B'
+    # Internet_to_GS_V: uplink_GS_ID regex 'GS_C'
+---
+Internet_to_GS_A:
+  type: MetaNode
+  source: "./internet.yml"
+  overrides:
+    GroundStation_A: ~
+
+GroundStation_A:
+  type: delaytime
+  time_delay: 1
+# ---
+# Internet_to_GS_B:
+#   type: MetaNode
+#   source: "./internet.yml"
+#   overrides:
+#     GroundStation_B: ~
+
+# GroundStation_B:
+#   type: delaytime
+#   time_delay: 1
+# ---
+# Internet_to_GS_C:
+#   type: MetaNode
+#   source: "./internet.yml"
+#   overrides:
+#     GroundStation_C: ~
+
+# GroundStation_C:
+#   type: delaytime
+#   time_delay: 1
+
+

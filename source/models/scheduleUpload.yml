@@ -1,0 +1,12 @@
+DEFAULT:
+    msg_size_key: size_mbits
+
+UplinkNetwork:
+  type: MetaNode
+  source: './internet.yml'
+  UplinkGroundStation: ~
+
+
+UplinkGroundStation:
+	type: MetaNode
+	source: './groundstation.yml'

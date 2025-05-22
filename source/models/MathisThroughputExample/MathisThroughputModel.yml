@@ -1,0 +1,105 @@
+DEFAULT:
+  msg_size_key: msg_size
+  seed: 42
+
+# Source node that generates messages with random sizes
+MessageSource:
+  type: RandomDataSource
+  random_size_min: 1024  # Minimum message size: 1KB
+  random_size_max: 10485760  # Maximum message size: 10MB (10 * 1024 * 1024)
+  random_delay_min: 5.0  # Minimum delay between messages: 5 seconds
+  random_delay_max: 15.0  # Maximum delay between messages: 15 seconds
+  single_pulse: False  # Generate continuous messages, not just one
+  start_node_active: True  # Start generating messages immediately
+  LowLatencyLowLoss: ~
+  HighLatencyLowLoss: ~
+  LowLatencyHighLoss: ~
+  HighLatencyHighLoss: ~
+
+# Scenario 1: Low latency (20ms RTT), low loss (0.01%)
+LowLatencyLowLoss:
+  type: MathisThroughputDelay
+  mss: 1460.0        # MSS in bytes (typical for Ethernet)
+  rtt: 0.02          # RTT in seconds (20ms)
+  packet_loss: 0.0001 # Packet loss rate of 0.01%
+  c_constant: 0.93   # Constant for TCP Reno
+  time_delay: 0
+  save_network_params: True
+  output_keys:
+    - throughput
+    - throughput_mbps
+    - processing_time
+    - readable_delay
+  LowLatencyLowLossSink: ~
+
+LowLatencyLowLossSink:
+  type: MathisSink
+  time_delay: 0
+  scenario_name: "Scenario 1: Low latency, low loss"
+  display_network_params: True
+
+# Scenario 2: High latency (200ms RTT), low loss (0.01%)
+HighLatencyLowLoss:
+  type: MathisThroughputDelay
+  mss: 1460.0         # MSS in bytes (typical for Ethernet)
+  rtt: 0.2            # RTT in seconds (200ms)
+  packet_loss: 0.0001  # Packet loss rate of 0.01%
+  c_constant: 0.93    # Constant for TCP Reno
+  time_delay: 0
+  save_network_params: True
+  output_keys:
+    - throughput
+    - throughput_mbps
+    - processing_time
+    - readable_delay
+  HighLatencyLowLossSink: ~
+
+HighLatencyLowLossSink:
+  type: MathisSink
+  time_delay: 0
+  scenario_name: "Scenario 2: High latency, low loss"
+  display_network_params: True
+
+# Scenario 3: Low latency (20ms RTT), high loss (1%)
+LowLatencyHighLoss:
+  type: MathisThroughputDelay
+  mss: 1460.0        # MSS in bytes (typical for Ethernet)
+  rtt: 0.02          # RTT in seconds (20ms)
+  packet_loss: 0.01  # Packet loss rate of 1%
+  c_constant: 0.93   # Constant for TCP Reno
+  time_delay: 0
+  save_network_params: True
+  output_keys:
+    - throughput
+    - throughput_mbps
+    - processing_time
+    - readable_delay
+  LowLatencyHighLossSink: ~
+
+LowLatencyHighLossSink:
+  type: MathisSink
+  time_delay: 0
+  scenario_name: "Scenario 3: Low latency, high loss"
+  display_network_params: True
+
+# Scenario 4: High latency (200ms RTT), high loss (1%)
+HighLatencyHighLoss:
+  type: MathisThroughputDelay
+  mss: 1460.0        # MSS in bytes (typical for Ethernet)
+  rtt: 0.2           # RTT in seconds (200ms)
+  packet_loss: 0.01  # Packet loss rate of 1%
+  c_constant: 0.93   # Constant for TCP Reno
+  time_delay: 0
+  save_network_params: True
+  output_keys:
+    - throughput
+    - throughput_mbps
+    - processing_time
+    - readable_delay
+  HighLatencyHighLossSink: ~
+
+HighLatencyHighLossSink:
+  type: MathisSink
+  time_delay: 0
+  scenario_name: "Scenario 4: High latency, high loss"
+  display_network_params: True

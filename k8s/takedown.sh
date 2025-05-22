@@ -107,6 +107,32 @@ if kubectl get namespace pulsar &> /dev/null; then
         echo -e "${YELLOW}Pulsar Service not found.${NC}"
     fi
 
+    # Remove Pulsar Manager deployment
+    echo -e "${YELLOW}Removing Pulsar Manager deployment...${NC}"
+    if kubectl get deployment pulsar-manager -n pulsar &> /dev/null; then
+        kubectl delete deployment pulsar-manager -n pulsar
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}Failed to remove Pulsar Manager. Attempting force removal...${NC}"
+            kubectl delete deployment pulsar-manager -n pulsar --force --grace-period=0 || true
+        fi
+        echo -e "${GREEN}Pulsar Manager deployment removed.${NC}"
+    else
+        echo -e "${YELLOW}Pulsar Manager deployment not found.${NC}"
+    fi
+
+    # Remove Pulsar Manager service
+    echo -e "${YELLOW}Removing Pulsar Manager service...${NC}"
+    if kubectl get service pulsar-manager -n pulsar &> /dev/null; then
+        kubectl delete service pulsar-manager -n pulsar
+        if [ $? -ne 0 ]; then
+            echo -e "${RED}Failed to remove Pulsar Manager service. Attempting force removal...${NC}"
+            kubectl delete service pulsar-manager -n pulsar --force --grace-period=0 || true
+        fi
+        echo -e "${GREEN}Pulsar Manager service removed.${NC}"
+    else
+        echo -e "${YELLOW}Pulsar Manager service not found.${NC}"
+    fi
+
     # Remove Pulsar configuration
     echo -e "${YELLOW}Removing Pulsar configuration...${NC}"
     if kubectl get configmap pulsar-config -n pulsar &> /dev/null; then

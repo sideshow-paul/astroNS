@@ -1,0 +1,49 @@
+DEFAULT:
+    msg_size_key: size_mbits
+SetToField:
+    type: AddKeyValue
+    key: to
+    value: Server
+    ISP: ~
+ISP:
+    type: DelayTime
+    time_delay: 0.001
+    NumOfHops: ~
+
+NumOfHops:
+    type: RandomDistrib
+    population: "10,11,12,13"
+    weights: "0.25,0.25,0.25,0.25"
+    result_key: num_of_hops
+    delay: 0.0001 
+    DelayEachHop: ~
+
+DelayEachHop:
+    type: AddKeyValue
+    def value_fn(sim_time,msg): return msg['num_of_hops'] * 0.0057
+    result_key: delay
+    Route: ~
+
+TimeToTraverse:
+    type: KeyDelayTime
+    delay_key: delay
+
+# Route:
+#     type: DelayTime
+#     time_delay: 0.001
+#     ToDataCenter: "to regex 'Server'"
+#     ToSiteNetwork: "to regex 'Client'"
+
+# ToDataCenter:
+#     type: DelayTime
+#     time_delay: 0.001
+
+# ToSiteNetwork:
+#     type: DelayTime
+#     time_delay: 0.001
+
+
+
+
+
+
