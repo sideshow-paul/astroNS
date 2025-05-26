@@ -185,21 +185,21 @@ class CalculateGSD(BaseNode):
                 # Check if geometry_results exist and use them
                 geometry_results = msg.get(self.geometry_results_key, None)
                 distance_km = msg.get(self.distance_key, self._distance_km())
-                
+
                 if geometry_results and isinstance(geometry_results, list) and len(geometry_results) > 0:
                     # Use the first geometry result for GSD calculation
                     geometry_data = geometry_results[0]
-                    
+
                     # Extract distance from geometry results
                     if 'distance_km' in geometry_data:
                         distance_km = geometry_data['distance_km']
                         msg[self.distance_key] = distance_km
-                    
+
                     # Extract ECEF positions if available
                     if 'observer_position_ecef_km' in geometry_data and 'target_position_ecef_km' in geometry_data:
                         msg[self.source_pos_key] = geometry_data['observer_position_ecef_km']
                         msg[self.target_pos_key] = geometry_data['target_position_ecef_km']
-                        
+
                 # If using ECEF positions, calculate distance from positions
                 elif self.use_ecef_positions:
                     source_pos = msg.get(self.source_pos_key, None)
@@ -251,25 +251,3 @@ class CalculateGSD(BaseNode):
                 data_out_list = [msg]
             else:
                 data_out_list = []
-
-    def run(self):
-        """
-        Run the node in the simulation environment.
-        """
-        while True:
-            # Wait for input data
-            data_in = yield self.env.in_queue.get()
-            
-            # Get node execution details
-            delay, processing_time, data_out_list = self.send(data_in)
-            
-            # Simulate processing time
-            yield self.env.timeout(processing_time)
-            
-            # Handle delay
-            if delay > 0:
-                yield self.env.timeout(delay)
-                
-            # Send output data
-            for data_out in data_out_list:
-                self.env.out_queue.put(data_out)

@@ -15,7 +15,40 @@ data:
       sub_name: my-sub
       simtime_field_name: simtime
       poll_frequency_secs: 11.0
-      UplinkTime: ~
+      timeout_secs: 5.0
+      retry_on_connection_error: true
+      max_retry_attempts: 3
+      retry_delay_secs: 10.0
+      ParseTaskingMessage: ~
+
+    ParseTaskingMessage:
+      type: ParseJsonMessage
+      json_key: json_data
+      pydantic_types: [TaskAssignment, SimulatorControlMessage, CollectedTargetData]
+      result_key: parsed_message
+      error_key: parse_error
+      successful_type_key: successful_type
+      write_out_field_list:
+        [
+          assignment_id,
+          satellite_name,
+          target_id,
+          aimpoint_latitude,
+          aimpoint_longitude,
+          advance_simulation_time_to_unix_ts,
+        ]
+      preserve_json: false
+      time_processing: 0.0
+      time_delay: 0.1
+      AdvanceSimulationTime: successful_type == "SimulatorControlMessage"
+      UplinkTime: successful_type == "TaskAssignment"
+
+    AdvanceSimulationTime:
+      type: KeyDelayTime
+      delay_key: advance_simulation_time_to_unix_ts
+      convert_unix_time: true
+      # Alternative ISO datetime configuration:
+      # convert_iso_datetime: true
 
     UplinkTime:
       type: RandomDistrib
@@ -30,15 +63,49 @@ data:
       result_key: UplinkTime
       time_delay: 1
       def value_fn(sim_time,msg): "return sim_time  + msg['uplinkTimeSecs']"
-      Quality: ~
+      CalculatePosition: ~
 
-    Quality:
-      type: RandomDistrib
-      population: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-      weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
-      time_delay: 1
-      results_key: Quality
+    CalculatePosition:
+      type: CalculateGeometry
+      tle_line1: "1 25544U 98067A   25096.03700594  .00015269  00000+0  28194-3 0  9999"
+      tle_line2: "2 25544  51.6369 304.3678 0004922  13.5339 346.5781 15.49280872503978"
+      target_lat: 0.0
+      target_lon: 0.0
+      target_alt: 0.0
+      duration_seconds: 3600.0
+      step_seconds: 60.0
+      single_time_point: false
+      storage_key: geometry_results
+      time_processing: 0.0
+      time_delay: 1.0
+      CalculateGSD: ~
+
+    CalculateGSD:
+      type: CalculateGSD
+      distance_key: distance_km
+      source_pos_key: observer_position_ecef_km
+      target_pos_key: target_position_ecef_km
+      use_ecef_positions: true
+      geometry_results_key: geometry_results
+      sensor_height_mm: 36.0
+      sensor_width_mm: 24.0
+      focal_length_mm: 500.0
+      image_height_px: 6000.0
+      image_width_px: 4000.0
+      use_sensor_height: true
+      gsd_storage_key: gsd_m_per_px
+      distance_km: 400.0
+      time_processing: 0.0
+      time_delay: 1.0
       DownlinkTime: ~
+
+    # Quality:
+    #   type: RandomDistrib
+    #   population: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    #   weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
+    #   time_delay: 1
+    #   results_key: Quality
+    #   DownlinkTime: ~
 
     DownlinkTime:
       type: RandomDistrib
