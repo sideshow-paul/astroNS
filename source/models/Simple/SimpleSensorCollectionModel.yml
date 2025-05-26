@@ -9,6 +9,7 @@ FromQueue:
   sub_name: my-sub
   simtime_field_name: simtime
   poll_frequency_secs: 11.0
+  timeout_secs: 5.0
   ParseTaskingMessage: ~
   
 ParseTaskingMessage:

@@ -35,6 +35,7 @@ class PulsarTopicSource(BaseNode):
         self.subscription_name: str = configuration.get("sub_name", "my-sub")
         self.simtime_field_name: str = configuration.get("simtime_field_name", "simtime")
         self.poll_frequency_secs: float = configuration.get("poll_frequency_secs", 10.0)
+        self.timeout_ms: int = int(configuration.get("timeout_secs", 5.0) * 1000)  # Convert to milliseconds
         self.generates_data_only: bool = True
 
         self.client = pulsar.Client(self.pulsar_server)
@@ -47,7 +48,7 @@ class PulsarTopicSource(BaseNode):
         self.env.process(self.run())
     def message_listener(self, consumer, msg):
             """Callback function for handling incoming messages asynchronously"""
-            import pudb; pu.db
+            #import pudb; pu.db
             try:
 
                 message = msg.data().decode('utf-8')
@@ -89,25 +90,36 @@ class PulsarTopicSource(BaseNode):
         yield 0.0, 0.0, []
 
         while True:
-            msg = self.consumer.receive()
-            self.consumer.acknowledge(msg)
-
-            message = msg.data().decode('utf-8')
-
             try:
-                parsed_message = json.loads(message)
-                id: str = str(uuid.uuid4())
-                parsed_message['ID'] = id
-                parsed_message[self.msg_size_key] = 10
-                parsed_message['simtime_arrived'] = self.env.now
-                print(self.log_prefix(parsed_message['ID']) + f"Received message: {message}")
-                #import pudb; pu.db
-                simtime_of_msg = parsed_message.get(self.simtime_field_name, self.env.now)
-                time_to_send_data_out = simtime_of_msg - self.env.now
-                # delay_till_get_next_msg,
-                # time_to_send_data_out,
-                yield self.poll_frequency_secs, time_to_send_data_out, [parsed_message]
-            except json.JSONDecodeError as e:
-                print(self.log_prefix() + f"Error parsing JSON message: {e}")
-                print(self.log_prefix() + f"Raw message content: {message}")
+                # Attempt to receive message with timeout
+                msg = self.consumer.receive(timeout_millis=self.timeout_ms)
+                self.consumer.acknowledge(msg)
+
+                message = msg.data().decode('utf-8')
+
+                try:
+                    parsed_message = json.loads(message)
+                    id: str = str(uuid.uuid4())
+                    parsed_message['ID'] = id
+                    parsed_message[self.msg_size_key] = 10
+                    parsed_message['simtime_arrived'] = self.env.now
+                    print(self.log_prefix(parsed_message['ID']) + f"Received message: {message}")
+                    #import pudb; pu.db
+                    simtime_of_msg = parsed_message.get(self.simtime_field_name, self.env.now)
+                    time_to_send_data_out = simtime_of_msg - self.env.now
+                    # delay_till_get_next_msg,
+                    # time_to_send_data_out,
+                    yield self.poll_frequency_secs, time_to_send_data_out, [parsed_message]
+                except json.JSONDecodeError as e:
+                    print(self.log_prefix() + f"Error parsing JSON message: {e}")
+                    print(self.log_prefix() + f"Raw message content: {message}")
+                    yield self.poll_frequency_secs, 0.0, []
+            
+            except Exception as e:
+                # Handle timeout or other receive errors
+                if "timeout" in str(e).lower():
+                    print(self.log_prefix() + f"No message received within {self.timeout_ms}ms timeout, polling again")
+                else:
+                    print(self.log_prefix() + f"Error receiving message: {e}")
+                # Yield for poll frequency duration when timeout occurs
                 yield self.poll_frequency_secs, 0.0, []
