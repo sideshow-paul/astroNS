@@ -38,6 +38,8 @@ class ParseJsonMessage(BaseNode):
         self._result_key = self.setStringFromConfig("result_key", "parsed_object")
         self._error_key = self.setStringFromConfig("error_key", "parse_error")
         self._preserve_json = self.setBoolFromConfig("preserve_json", True)
+        self._successful_type_key = self.setStringFromConfig("successful_type_key", "successful_type")
+        self._write_out_field_list = configuration.get("write_out_field_list", [])
         
         # Parse pydantic_types as list if it's a string
         pydantic_type_config = configuration.get("pydantic_types", "TaskAssignment")
@@ -84,6 +86,14 @@ class ParseJsonMessage(BaseNode):
     @property
     def preserve_json(self) -> bool:
         return self._preserve_json()
+
+    @property
+    def successful_type_key(self) -> Optional[str]:
+        return self._successful_type_key()
+
+    @property
+    def write_out_field_list(self):
+        return self._write_out_field_list
 
     def parse_json_to_pydantic(self, json_data: str, pydantic_types: List[str]) -> Tuple[Any, Optional[str], Optional[str]]:
         """
@@ -152,6 +162,7 @@ class ParseJsonMessage(BaseNode):
                 result_key = msg.get('result_key', self.result_key)
                 error_key = msg.get('error_key', self.error_key)
                 preserve_json = msg.get('preserve_json', self.preserve_json)
+                successful_type_key = msg.get('successful_type_key', self.successful_type_key)
                 
                 # Ensure pydantic_types is a list
                 if isinstance(pydantic_types_input, str):
@@ -183,6 +194,20 @@ class ParseJsonMessage(BaseNode):
                     else:
                         # Parsing successful
                         msg[result_key] = parsed_object
+                        msg[successful_type_key] = successful_type
+                        
+                        # Copy specified fields to output message
+                        write_out_fields = msg.get('write_out_field_list', self.write_out_field_list)
+                        if write_out_fields:
+                            if write_out_fields == "All Fields" or (isinstance(write_out_fields, list) and "All Fields" in write_out_fields):
+                                # Copy all pydantic fields
+                                for field_name, field_value in parsed_object.__dict__.items():
+                                    msg[field_name] = field_value
+                            elif isinstance(write_out_fields, list):
+                                # Copy only specified fields
+                                for field_name in write_out_fields:
+                                    if hasattr(parsed_object, field_name):
+                                        msg[field_name] = getattr(parsed_object, field_name)
                         
                         # Remove the original JSON if not preserving
                         if not preserve_json:

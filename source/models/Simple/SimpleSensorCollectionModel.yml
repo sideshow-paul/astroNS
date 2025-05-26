@@ -17,11 +17,22 @@ ParseTaskingMessage:
   pydantic_types: [TaskAssignment, SimulatorControlMessage, CollectedTargetData]
   result_key: parsed_message
   error_key: parse_error
+  successful_type_key: successful_type
+  write_out_field_list: [assignment_id, satellite_name, target_id, aimpoint_latitude, aimpoint_longitude, advance_simulation_time_to_unix_ts]
   preserve_json: false
   time_processing: 0.0
   time_delay: 0.1
-  UplinkTime: ~
-
+  AdvanceSimulationTime: successful_type == "SimulatorControlMessage"
+  UplinkTime: successful_type == "TaskAssignment"
+  
+AdvanceSimulationTime:
+  type: KeyDelayTime
+  delay_key: advance_simulation_time_to_unix_ts
+  convert_unix_time: true
+  # Alternative ISO datetime configuration:
+  # convert_iso_datetime: true
+  
+  
 UplinkTime:
   type: RandomDistrib
   population: [10, 20, 30, 40, 50, 60, 80, 90]

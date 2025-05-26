@@ -36,6 +36,8 @@ def test_parse_json_message_node():
         "pydantic_types": ["TaskAssignment", "SimulatorControlMessage", "CollectedTargetData"],
         "result_key": "parsed_object",
         "error_key": "parse_error",
+        "successful_type_key": "successful_type",
+        "write_out_field_list": ["assignment_id", "satellite_name", "target_id"],
         "preserve_json": True,
         "time_processing": 0.0,
         "time_delay": 0.1
@@ -183,6 +185,29 @@ def test_parse_json_message_node():
             "pydantic_types": ["UnknownType", "TaskAssignment", "AnotherUnknown"]
         }
         env.in_queue.put(mixed_types_input)
+        
+        # Wait between inputs
+        yield env.timeout(5)
+        
+        # Test Case 9: Write out all fields
+        all_fields_input = {
+            "ID": "TEST_009",
+            "json_data": json.dumps(task_assignment_json),
+            "write_out_field_list": "All Fields"
+        }
+        env.in_queue.put(all_fields_input)
+        
+        # Wait between inputs
+        yield env.timeout(5)
+        
+        # Test Case 10: Write out specific fields only
+        specific_fields_input = {
+            "ID": "TEST_010",
+            "json_data": json.dumps(control_message_json),
+            "pydantic_types": ["SimulatorControlMessage"],
+            "write_out_field_list": ["message_type", "timestamp", "batch_id"]
+        }
+        env.in_queue.put(specific_fields_input)
     
     # Define a process to read output from the node
     def output_process():
@@ -199,7 +224,9 @@ def test_parse_json_message_node():
                 # Check for parsed object
                 if "parsed_object" in output_data:
                     parsed_obj = output_data["parsed_object"]
+                    successful_type = output_data.get("successful_type", "Unknown")
                     print(f"Successfully parsed: {type(parsed_obj).__name__}")
+                    print(f"Successful pydantic type: {successful_type}")
                     print(f"Object attributes: {list(parsed_obj.__dict__.keys())}")
                     
                     # Show some key attributes based on type
@@ -216,7 +243,9 @@ def test_parse_json_message_node():
                 for key in ["control_message", "collected_data"]:
                     if key in output_data:
                         parsed_obj = output_data[key]
+                        successful_type = output_data.get("successful_type", "Unknown")
                         print(f"Successfully parsed {key}: {type(parsed_obj).__name__}")
+                        print(f"Successful pydantic type: {successful_type}")
                 
                 # Check for errors
                 if "parse_error" in output_data:
@@ -225,6 +254,16 @@ def test_parse_json_message_node():
                 # Check if message was passed through unchanged
                 if "some_other_data" in output_data:
                     print(f"Message passed through unchanged: {output_data.get('some_other_data')}")
+                
+                # Check for copied pydantic fields
+                copied_fields = []
+                pydantic_fields = ["assignment_id", "satellite_name", "target_id", "message_type", "timestamp", "batch_id", "opportunity_id", "task_id"]
+                for field in pydantic_fields:
+                    if field in output_data and field not in ["parsed_object", "control_message", "collected_data"]:
+                        copied_fields.append(f"{field}: {output_data[field]}")
+                
+                if copied_fields:
+                    print(f"Copied pydantic fields: {', '.join(copied_fields)}")
                 
                 # Check if original JSON was preserved
                 if "json_data" in output_data:
@@ -239,7 +278,7 @@ def test_parse_json_message_node():
     env.process(output_process())
     
     # Run the simulation
-    env.run(until=35)
+    env.run(until=50)
 
 if __name__ == "__main__":
     test_parse_json_message_node()
