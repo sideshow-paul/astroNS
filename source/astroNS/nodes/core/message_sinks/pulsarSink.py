@@ -50,7 +50,7 @@ class PulsarTopicSink(BaseNode):
         data_out_list: List[Dict[str, Any]] = []
 
         while True:
-            data_in = yield (delay_till_get_next_msg, time_to_send_data_out, data_out_list)
+            data_in = yield #(delay_till_get_next_msg, time_to_send_data_out, data_out_list)
 
             try:
                 # Process the incoming data

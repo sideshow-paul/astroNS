@@ -6,3 +6,10 @@ try:
     print(msg_prefix + "Loaded PulsarTopicSink node.")
 except ModuleNotFoundError as e:
     raise e
+
+try:
+    from .mathis_sink import MathisSink
+
+    print(msg_prefix + "Loaded MathisSink node.")
+except ModuleNotFoundError as e:
+    print(msg_prefix + f"Failed to load MathisSink node: {e}")

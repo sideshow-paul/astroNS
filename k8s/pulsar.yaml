@@ -44,6 +44,14 @@ spec:
             limits:
               memory: "2Gi"
               cpu: "1000m"
+          readinessProbe:
+            httpGet:
+              path: /admin/v2/brokers/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
           env:
             - name: PULSAR_MEM
               value: "-Xms512m -Xmx1g"

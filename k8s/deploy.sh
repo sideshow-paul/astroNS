@@ -81,6 +81,16 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Wait for Pulsar to be ready
+echo -e "${YELLOW}Waiting for Pulsar to be ready (this may take a few minutes)...${NC}"
+kubectl wait --for=condition=ready pod -l app=pulsar,component=broker -n pulsar --timeout=600s
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Timed out waiting for Pulsar to be ready. Please check Pulsar pods:${NC}"
+    kubectl get pods -n pulsar
+    echo -e "${RED}Check logs with: kubectl logs -n pulsar -l app=pulsar,component=broker${NC}"
+    exit 1
+fi
+
 # Deploy Pulsar Manager
 echo -e "${YELLOW}Deploying Pulsar Manager...${NC}"
 cat <<EOF | kubectl apply -f - -n pulsar
@@ -108,9 +118,16 @@ spec:
         image: apachepulsar/pulsar-manager:v0.4.0
         ports:
         - containerPort: 9527
+          name: frontend
+        - containerPort: 7750
+          name: backend
         env:
         - name: SPRING_CONFIGURATION_FILE
           value: /pulsar-manager/pulsar-manager/application.properties
+        - name: REDIRECT_HOST
+          value: "0.0.0.0"
+        - name: REDIRECT_PORT
+          value: "9527"
 
 EOF
 
@@ -127,23 +144,19 @@ metadata:
 spec:
   ports:
   - port: 9527
-    name: pulsar-manager
+    name: frontend
     targetPort: 9527
+    nodePort: 30527
+  - port: 7750
+    name: backend
+    targetPort: 7750
   selector:
     app: pulsar
     component: manager
   type: NodePort
 EOF
 
-# Wait for Pulsar to be ready
-echo -e "${YELLOW}Waiting for Pulsar to be ready (this may take a few minutes)...${NC}"
-kubectl wait --for=condition=ready pod -l app=pulsar,component=broker -n pulsar --timeout=600s
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Timed out waiting for Pulsar to be ready. Please check Pulsar pods:${NC}"
-    kubectl get pods -n pulsar
-    echo -e "${RED}Check logs with: kubectl logs -n pulsar -l app=pulsar,component=broker${NC}"
-    exit 1
-fi
+
 
 # Wait for Pulsar Manager to be ready
 echo -e "${YELLOW}Waiting for Pulsar Manager to be ready...${NC}"
@@ -206,10 +219,13 @@ echo "kubectl get pods"
 echo "kubectl logs -l app=astrons"
 
 # Display Pulsar Manager access information
-PULSAR_MANAGER_PORT=$(kubectl get svc pulsar-manager -n pulsar -o jsonpath='{.spec.ports[0].nodePort}')
-if [ -n "$PULSAR_MANAGER_PORT" ]; then
+PULSAR_MANAGER_UI_PORT=$(kubectl get svc pulsar-manager -n pulsar -o jsonpath='{.spec.ports[?(@.name=="frontend")].nodePort}')
+PULSAR_MANAGER_API_PORT=$(kubectl get svc pulsar-manager -n pulsar -o jsonpath='{.spec.ports[?(@.name=="backend")].nodePort}')
+NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+
+if [ -n "$PULSAR_MANAGER_UI_PORT" ]; then
     echo -e "${GREEN}Pulsar Manager UI is available at:${NC}"
-    echo -e "http://<your-node-ip>:$PULSAR_MANAGER_PORT"
+    echo -e "http://$NODE_IP:$PULSAR_MANAGER_UI_PORT"
     echo -e "${YELLOW}Setting up initial admin user...${NC}"
 
     # Wait for the Pulsar Manager API to be ready
@@ -220,26 +236,33 @@ if [ -n "$PULSAR_MANAGER_PORT" ]; then
     echo -e "${YELLOW}Creating admin user for Pulsar Manager...${NC}"
 
     # Wait a bit for the service to be fully ready
-    sleep 10
+    sleep 20
 
     # Get CSRF token and create admin user
     echo -e "${YELLOW}Getting CSRF token and creating admin user...${NC}"
-    CSRF_TOKEN=$(curl http://localhost:$PULSAR_MANAGER_PORT/pulsar-manager/csrf-token)
-    echo $CSRF_TOKEN
-    sleep 10
+    CSRF_TOKEN=$(curl -s http://$NODE_IP:$PULSAR_MANAGER_API_PORT/pulsar-manager/csrf-token)
+    echo "CSRF Token: $CSRF_TOKEN"
+    
+    if [ -z "$CSRF_TOKEN" ]; then
+        echo -e "${YELLOW}Could not retrieve CSRF token, trying again...${NC}"
+        sleep 10
+        CSRF_TOKEN=$(curl -s http://$NODE_IP:$PULSAR_MANAGER_API_PORT/pulsar-manager/csrf-token)
+        echo "CSRF Token: $CSRF_TOKEN"
+    fi
+    
     # Create the admin user with CSRF token
     echo -e "${YELLOW}Creating admin user with CSRF token...${NC}"
-    curl \
-      -H 'X-XSRF-TOKEN: $CSRF_TOKEN' \
-      -H 'Cookie: XSRF-TOKEN=$CSRF_TOKEN;' \
+    curl -s \
+      -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
+      -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN;" \
       -H "Content-Type: application/json" \
-      -X PUT http://localhost:$PULSAR_MANAGER_PORT/pulsar-manager/users/superuser \
+      -X PUT http://$NODE_IP:$PULSAR_MANAGER_API_PORT/pulsar-manager/users/superuser \
       -d '{"name": "admin", "password": "apachepulsar", "description": "Administrator", "email": "admin@example.org"}'
 
     echo ""
 
     echo -e "${GREEN}Pulsar Manager initial setup complete${NC}"
-    echo -e "${YELLOW}Access the Pulsar Manager UI at http://<your-node-ip>:$PULSAR_MANAGER_PORT${NC}"
+    echo -e "${YELLOW}Access the Pulsar Manager UI at http://$NODE_IP:$PULSAR_MANAGER_UI_PORT${NC}"
     echo -e "${YELLOW}Log in with:${NC}"
     echo -e "  Username: admin"
     echo -e "  Password: apachepulsar"
