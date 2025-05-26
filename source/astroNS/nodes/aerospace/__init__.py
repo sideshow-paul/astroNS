@@ -11,6 +11,27 @@ try:
 except ModuleNotFoundError as e:
     raise e
 
+try:
+    from .accessGenerator import AccessGenerator
+
+    print(msg_prefix + "Loaded AccessGenerator node.")
+except ModuleNotFoundError as e:
+    raise e
+
+try:
+    from .calculate_geometry import CalculateGeometry
+
+    print(msg_prefix + "Loaded CalculateGeometry node.")
+except ModuleNotFoundError as e:
+    raise e
+
+try:
+    from .calculate_gsd import CalculateGSD
+
+    print(msg_prefix + "Loaded CalculateGSD node.")
+except ModuleNotFoundError as e:
+    raise e
+
 # try:
 #     from .propagator import Propagator
 

@@ -8,7 +8,7 @@ from datetime import datetime
 sys.path.append(os.path.join(os.path.dirname(__file__), 'astroNS'))
 
 # Import the ParseJsonMessage node
-from pydantic_models.ParseJsonMessage import ParseJsonMessage
+from nodes.pydantic_models.ParseJsonMessage import ParseJsonMessage
 
 class MockQueue:
     def __init__(self):

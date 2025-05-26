@@ -10,8 +10,11 @@ FromQueue:
   simtime_field_name: simtime
   poll_frequency_secs: 11.0
   timeout_secs: 5.0
+  retry_on_connection_error: true
+  max_retry_attempts: 3
+  retry_delay_secs: 10.0
   ParseTaskingMessage: ~
-  
+
 ParseTaskingMessage:
   type: ParseJsonMessage
   json_key: json_data
@@ -19,21 +22,28 @@ ParseTaskingMessage:
   result_key: parsed_message
   error_key: parse_error
   successful_type_key: successful_type
-  write_out_field_list: [assignment_id, satellite_name, target_id, aimpoint_latitude, aimpoint_longitude, advance_simulation_time_to_unix_ts]
+  write_out_field_list:
+    [
+      assignment_id,
+      satellite_name,
+      target_id,
+      aimpoint_latitude,
+      aimpoint_longitude,
+      advance_simulation_time_to_unix_ts,
+    ]
   preserve_json: false
   time_processing: 0.0
   time_delay: 0.1
   AdvanceSimulationTime: successful_type == "SimulatorControlMessage"
   UplinkTime: successful_type == "TaskAssignment"
-  
+
 AdvanceSimulationTime:
   type: KeyDelayTime
   delay_key: advance_simulation_time_to_unix_ts
   convert_unix_time: true
   # Alternative ISO datetime configuration:
   # convert_iso_datetime: true
-  
-  
+
 UplinkTime:
   type: RandomDistrib
   population: [10, 20, 30, 40, 50, 60, 80, 90]
@@ -47,8 +57,8 @@ ConvertUplinkTimeToDateTime:
   result_key: UplinkTime
   time_delay: 1
   def value_fn(sim_time,msg): "return sim_time  + msg['uplinkTimeSecs']"
-  Quality: ~
-  
+  CalculatePosition: ~
+
 CalculatePosition:
   type: CalculateGeometry
   tle_line1: "1 25544U 98067A   25096.03700594  .00015269  00000+0  28194-3 0  9999"
@@ -63,7 +73,7 @@ CalculatePosition:
   time_processing: 0.0
   time_delay: 1.0
   CalculateGSD: ~
-  
+
 CalculateGSD:
   type: CalculateGSD
   distance_key: distance_km
@@ -82,7 +92,7 @@ CalculateGSD:
   time_processing: 0.0
   time_delay: 1.0
   DownlinkTime: ~
-  
+
 # Quality:
 #   type: RandomDistrib
 #   population: [1, 2, 3, 4, 5, 6, 7, 8, 9]

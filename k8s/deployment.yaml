@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: astrons
-          image: astrons:latest
+          image: astrons:0.8
           imagePullPolicy: IfNotPresent
           resources:
             requests:

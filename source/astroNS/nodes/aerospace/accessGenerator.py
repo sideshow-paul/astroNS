@@ -2,6 +2,11 @@ from typing import List, Dict, Tuple, Any, Optional, Callable
 from datetime import datetime, timedelta, timezone
 import numpy as np
 import logging
+import sys
+import os
+
+# Add simple_accgen to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../../simple_accgen/src'))
 
 from nodes.core.base import BaseNode
 from simple_accgen.access_generator import AccessGenerator as SimpleAccessGenerator

@@ -10,7 +10,7 @@ import json
 import logging
 
 from nodes.core.base import BaseNode
-from pydantic_models.simulator_interfaces import TaskAssignment, SimulatorControlMessage, CollectedTargetData
+from nodes.pydantic_models.simulator_interfaces import TaskAssignment, SimulatorControlMessage, CollectedTargetData
 
 
 class ParseJsonMessage(BaseNode):

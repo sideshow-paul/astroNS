@@ -13,11 +13,16 @@ Calculated properties include:
 import datetime
 import numpy as np
 import logging
+import sys
+import os
 from math import degrees, radians
 
 from typing import List, Dict, Tuple, Any, Optional, Callable
 from simpy.core import Environment
 from datetime import datetime, timedelta, timezone
+
+# Add simple_accgen to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../../../simple_accgen/src'))
 
 from nodes.core.base import BaseNode
 from simple_accgen.geometry import ObserverTargetGeometry

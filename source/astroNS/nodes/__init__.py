@@ -18,3 +18,4 @@ from nodes.core.base import BaseNode
 from .core import *
 from .aerospace import *
 from .network import *
+from .pydantic_models import *

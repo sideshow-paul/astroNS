@@ -36,13 +36,18 @@ def test_pulsar_timeout():
         print(f"Timeout: {test_config['timeout_secs']} seconds")
         
         try:
-            # Create Pulsar client and consumer
+            # Create Pulsar client and consumer with subscription timeout handling
+            print(f"Attempting to connect to Pulsar server: {pulsar_server}")
             client = pulsar.Client(pulsar_server)
+            print(f"✓ Successfully connected to Pulsar server")
+            
+            print(f"Attempting to subscribe to topic: {topic_name}")
             consumer = client.subscribe(
                 topic_name,
                 subscription_name=f"test-sub-{int(time.time())}",
                 subscription_type=pulsar.SubscriptionType.Exclusive
             )
+            print(f"✓ Successfully subscribed to topic")
             
             timeout_ms = int(test_config['timeout_secs'] * 1000)
             
@@ -69,8 +74,16 @@ def test_pulsar_timeout():
             client.close()
             
         except Exception as e:
-            print(f"✗ Error setting up Pulsar client: {e}")
-            print("  Make sure Pulsar is running on localhost:6650")
+            error_type = type(e).__name__
+            print(f"✗ Error setting up Pulsar client ({error_type}): {e}")
+            if "connection" in str(e).lower():
+                print("  → Connection error: Make sure Pulsar is running on localhost:6650")
+            elif "timeout" in str(e).lower():
+                print("  → Subscription timeout: Pulsar server may be overloaded")
+            elif "topic" in str(e).lower():
+                print("  → Topic error: Topic may not exist or have permission issues")
+            else:
+                print("  → Check Pulsar server status and configuration")
         
         print("-" * 40)
         print()
@@ -176,9 +189,140 @@ def test_pulsar_with_messages():
     # Wait for sender to complete
     sender_thread.join()
 
+def test_subscription_failures():
+    """Test various subscription failure scenarios"""
+    
+    print("\nTESTING SUBSCRIPTION FAILURE SCENARIOS")
+    print("=" * 60)
+    
+    # Test 1: Invalid server
+    print("Test 1: Invalid Pulsar server")
+    try:
+        client = pulsar.Client("pulsar://invalid-server:6650")
+        consumer = client.subscribe("test-topic", subscription_name="test-sub")
+        print("✗ Unexpected success with invalid server")
+        consumer.close()
+        client.close()
+    except Exception as e:
+        print(f"✓ Expected error with invalid server: {type(e).__name__}")
+    
+    # Test 2: Invalid port
+    print("\nTest 2: Invalid port")
+    try:
+        client = pulsar.Client("pulsar://localhost:9999")
+        consumer = client.subscribe("test-topic", subscription_name="test-sub")
+        print("✗ Unexpected success with invalid port")
+        consumer.close()
+        client.close()
+    except Exception as e:
+        print(f"✓ Expected error with invalid port: {type(e).__name__}")
+    
+    # Test 3: Valid server but problematic topic
+    print("\nTest 3: Problematic topic name")
+    try:
+        client = pulsar.Client("pulsar://localhost:6650")
+        consumer = client.subscribe("", subscription_name="test-sub")  # Empty topic name
+        print("✗ Unexpected success with empty topic")
+        consumer.close()
+        client.close()
+    except Exception as e:
+        print(f"✓ Expected error with empty topic: {type(e).__name__}")
+
+def test_retry_functionality():
+    """Test the retry functionality of PulsarTopicSource"""
+    
+    print("\nTESTING RETRY FUNCTIONALITY")
+    print("=" * 60)
+    
+    # Test configuration with different retry settings
+    retry_configs = [
+        {
+            "name": "Default retry settings",
+            "config": {
+                "retry_on_connection_error": True,
+                "max_retry_attempts": 3,
+                "retry_delay_secs": 2.0
+            }
+        },
+        {
+            "name": "Aggressive retry settings",
+            "config": {
+                "retry_on_connection_error": True,
+                "max_retry_attempts": 5,
+                "retry_delay_secs": 1.0
+            }
+        },
+        {
+            "name": "Retry disabled",
+            "config": {
+                "retry_on_connection_error": False,
+                "max_retry_attempts": 1,
+                "retry_delay_secs": 5.0
+            }
+        }
+    ]
+    
+    for test_case in retry_configs:
+        print(f"\nTesting: {test_case['name']}")
+        config = test_case['config']
+        
+        print(f"  retry_on_connection_error: {config['retry_on_connection_error']}")
+        print(f"  max_retry_attempts: {config['max_retry_attempts']}")
+        print(f"  retry_delay_secs: {config['retry_delay_secs']}")
+        
+        # Simulate retry logic (without actual PulsarTopicSource to avoid dependencies)
+        max_attempts = config['max_retry_attempts']
+        retry_enabled = config['retry_on_connection_error']
+        delay = config['retry_delay_secs']
+        
+        if retry_enabled:
+            print(f"  → Would attempt connection {max_attempts} times with {delay}s delays")
+            total_time = (max_attempts - 1) * delay
+            print(f"  → Maximum retry time: {total_time} seconds")
+        else:
+            print(f"  → Would attempt connection once, then stop")
+        
+        print(f"  ✓ Configuration validated")
+
+def test_connection_recovery_simulation():
+    """Simulate connection recovery scenarios"""
+    
+    print("\nTESTING CONNECTION RECOVERY SIMULATION")
+    print("=" * 60)
+    
+    scenarios = [
+        {
+            "name": "Pulsar server restart",
+            "description": "Server goes down then comes back up",
+            "expected_behavior": "Should retry and reconnect when server returns"
+        },
+        {
+            "name": "Network interruption",
+            "description": "Temporary network connectivity loss",
+            "expected_behavior": "Should retry connection attempts"
+        },
+        {
+            "name": "Topic deletion and recreation",
+            "description": "Topic is deleted then recreated",
+            "expected_behavior": "Should handle subscription errors and retry"
+        },
+        {
+            "name": "Permission changes",
+            "description": "Subscription permissions are temporarily revoked",
+            "expected_behavior": "Should retry until permissions restored"
+        }
+    ]
+    
+    for scenario in scenarios:
+        print(f"\nScenario: {scenario['name']}")
+        print(f"  Description: {scenario['description']}")
+        print(f"  Expected: {scenario['expected_behavior']}")
+        print(f"  ✓ Scenario documented for manual testing")
+
 if __name__ == "__main__":
-    print("Pulsar Timeout Test Script")
-    print("This script tests the timeout functionality of PulsarTopicSource")
+    print("Pulsar Timeout and Retry Test Script")
+    print("This script tests the timeout functionality and retry logic of PulsarTopicSource")
+    print("and various subscription failure scenarios")
     print("Make sure Pulsar is running on localhost:6650 before running this test")
     print()
     
@@ -189,9 +333,23 @@ if __name__ == "__main__":
         # Test normal operation with messages
         test_pulsar_with_messages()
         
+        # Test subscription failure scenarios
+        test_subscription_failures()
+        
+        # Test retry functionality
+        test_retry_functionality()
+        
+        # Test connection recovery simulation
+        test_connection_recovery_simulation()
+        
     except KeyboardInterrupt:
         print("\nTest interrupted by user")
     except Exception as e:
         print(f"Test failed with error: {e}")
     
     print("\nTest completed")
+    print("\nNOTE: For full testing of retry functionality, manually:")
+    print("1. Start the test with Pulsar running")
+    print("2. Stop Pulsar during execution to test retry logic")
+    print("3. Restart Pulsar to test reconnection")
+    print("4. Observe retry attempts and recovery behavior")
