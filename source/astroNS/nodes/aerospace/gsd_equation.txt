@@ -1,0 +1,14 @@
+GSD Formula
+
+The following formula is used to calculate a ground sample distance.
+
+           A * SH
+GSD = ---------------
+         FL * IH
+
+Where:
+GSD = Ground Sample Distance
+A   = Altitude
+SH  = Sensor width/height
+FL  = Focal length of the camera
+IH  = Image width/length
