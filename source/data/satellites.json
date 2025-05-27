@@ -1,0 +1,74 @@
+{
+  "ISS": {
+    "name": "International Space Station",
+    "tle_line1": "1 25544U 98067A   25146.54650260  .00010397  00000+0  19155-3 0  9999",
+    "tle_line2": "2 25544  51.6382  54.2937 0002241 147.4648 271.6158 15.49752720511807",
+    "description": "International Space Station"
+  },
+  "HUBBLE": {
+    "name": "Hubble Space Telescope",
+    "tle_line1": "1 20580U 90037B   25145.47119615  .00004519  00000+0  16725-3 0  9997",
+    "tle_line2": "2 20580  28.4672 198.8675 0002572 187.4840 172.5716 15.25088606729219",
+    "description": "Hubble Space Telescope"
+  },
+  "TERRA": {
+    "name": "Terra (EOS AM-1)",
+    "tle_line1": "1 25994U 99068A   25145.90692527  .00000391  00000+0  89383-4 0  9995",
+    "tle_line2": "2 25994  97.9991 204.6256 0002857  41.9056  44.2816 14.60687738353182",
+    "description": "Terra Earth observation satellite"
+  },
+  "AQUA": {
+    "name": "Aqua (EOS PM-1)",
+    "tle_line1": "1 27424U 02022A   25145.94948898  .00000797  00000+0  17145-3 0  9994",
+    "tle_line2": "2 27424  98.3769 104.0228 0002087  90.1496 310.6777 14.61262118226706",
+    "description": "Aqua Earth observation satellite"
+  },
+  "LANDSAT8": {
+    "name": "Landsat 8 (LDCM)",
+    "tle_line1": "1 39084U 13008A   25145.93479481  .00000326  00000+0  82507-4 0  9994",
+    "tle_line2": "2 39084  98.2260 216.6931 0001318  98.3131 261.8217 14.57108177641503",
+    "description": "Landsat 8 Earth observation satellite"
+  },
+  "SENTINEL1A": {
+    "name": "Sentinel-1A",
+    "tle_line1": "1 39634U 14016A   25145.80193218  .00000084  00000+0  27428-4 0  9994",
+    "tle_line2": "2 39634  98.1794 153.9506 0001366  89.7302 270.4054 14.59199348593528",
+    "description": "Sentinel-1A radar satellite"
+  },
+  "WORLDVIEW3": {
+    "name": "WorldView-3",
+    "tle_line1": "1 40105U 14045A   25145.65657520  .00000007  00000+0  00000+0 0  9992",
+    "tle_line2": "2 40105  55.1071 103.9246 0028654 116.3860 243.8693  2.00559515 78301",
+    "description": "WorldView-3 commercial imaging satellite"
+  },
+  "SPOT7": {
+    "name": "SPOT 7",
+    "tle_line1": "1 40053U 14034A   25145.94656444  .00000424  00000+0  97001-4 0  9993",
+    "tle_line2": "2 40053  98.1124 212.3744 0001405  83.6646 276.4714 14.60440995580629",
+    "description": "SPOT 7 Earth observation satellite"
+  },
+  "EXAMPLE-SAT-1": {
+    "name": "Example Satellite 1",
+    "tle_line1": "1 99999U 25001A   25096.50000000  .00001234  00000+0  56789-4 0  9999",
+    "tle_line2": "2 99999  51.6400 180.0000 0001000 270.0000  90.0000 15.50000000000001",
+    "description": "Example satellite for testing"
+  },
+  "TEST-SAT": {
+    "name": "Test Satellite",
+    "tle_line1": "1 99998U 25002A   25096.50000000  .00002345  00000+0  67890-4 0  9999",
+    "tle_line2": "2 99998  98.5000 200.0000 0002000 180.0000 180.0000 14.20000000000001",
+    "description": "Test satellite for validation"
+  },
+  "NOAA1": {
+    "name": "NOAA 1",
+    "tle_line1": "1 04793U 70106A   25145.59023815 -.00000031  00000+0  76239-4 0  9992",
+    "tle_line2": "2 04793 101.3903 191.2538 0031652  27.8299 102.1573 12.54042986492101",
+    "description": "NOAA weather satellite"
+  },
+  "UMBRA05": {
+    "name": "UMBRA-05",
+    "tle_line1": "1 55036U 23001AD  25145.81193443  .00035221  00000+0  94896-3 0  9996",
+    "tle_line2": "2 55036  97.3722 203.1741 0004497 237.8384 122.2424 15.37739478132544",
+    "description": "Satellite 55036"
+  }
+}

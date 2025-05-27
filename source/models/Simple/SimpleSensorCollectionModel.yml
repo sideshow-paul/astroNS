@@ -29,6 +29,9 @@ ParseTaskingMessage:
       target_id,
       aimpoint_latitude,
       aimpoint_longitude,
+      access_start_time_unix_ts,
+      access_end_time_unix_ts,
+      access_start_time_iso,
       advance_simulation_time_to_unix_ts,
     ]
   preserve_json: false
@@ -41,6 +44,7 @@ AdvanceSimulationTime:
   type: KeyDelayTime
   delay_key: advance_simulation_time_to_unix_ts
   convert_unix_time: true
+  FromQueue: ~
   # Alternative ISO datetime configuration:
   # convert_iso_datetime: true
 
@@ -57,18 +61,29 @@ ConvertUplinkTimeToDateTime:
   result_key: UplinkTime
   time_delay: 1
   def value_fn(sim_time,msg): "return sim_time  + msg['uplinkTimeSecs']"
+  ConvertAccessTimeToISO: ~
+
+ConvertAccessTimeToISO:
+  type: AddKeyValue
+  result_key: access_start_time_iso
+  time_delay: 0.1
+  def value_fn(sim_time,msg): "import datetime; return datetime.datetime.fromtimestamp(msg['access_start_time_unix_ts'], tz=datetime.timezone.utc).isoformat()"
   CalculatePosition: ~
 
 CalculatePosition:
   type: CalculateGeometry
-  tle_line1: "1 25544U 98067A   25096.03700594  .00015269  00000+0  28194-3 0  9999"
-  tle_line2: "2 25544  51.6369 304.3678 0004922  13.5339 346.5781 15.49280872503978"
+  satellite_name_key: satellite_name
+  tle_file_path: ./data/satellites.json
+  target_lat_key: aimpoint_latitude
+  target_lon_key: aimpoint_longitude
+  target_alt_key: target_alt
+  start_time_key: access_start_time_iso
   target_lat: 0.0
   target_lon: 0.0
   target_alt: 0.0
-  duration_seconds: 3600.0
-  step_seconds: 60.0
-  single_time_point: false
+  duration_seconds: 1.0
+  step_seconds: 1.0
+  single_time_point: true
   storage_key: geometry_results
   time_processing: 0.0
   time_delay: 1.0
@@ -135,6 +150,8 @@ ProductDelivery:
   type: PulsarTopicSink
   topic_name: sim_output
   pulsar_server: pulsar://localhost:6650
+  use_pydantic_validation: true
+  pydantic_class: CollectedTargetData
   time_delay: 1
   FinalNode: ~
 

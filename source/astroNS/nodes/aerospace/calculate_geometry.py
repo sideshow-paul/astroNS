@@ -68,8 +68,15 @@ class CalculateGeometry(BaseNode):
         )
 
         # Configuration parameters
-        self._tle_line1 = self.setStringFromConfig('tle_line1', '')
-        self._tle_line2 = self.setStringFromConfig('tle_line2', '')
+        self._satellite_name = self.setStringFromConfig('satellite_name', 'ISS')
+        self._satellite_name_key = self.setStringFromConfig('satellite_name_key', 'satellite_name')
+        self._tle_file_path = self.setStringFromConfig('tle_file_path', 'satellites.json')
+        self._target_lat_key = self.setStringFromConfig('target_lat_key', 'target_lat')
+        self._target_lon_key = self.setStringFromConfig('target_lon_key', 'target_lon')
+        self._target_alt_key = self.setStringFromConfig('target_alt_key', 'target_alt')
+        self._start_time_key = self.setStringFromConfig('start_time_key', 'start_time')
+        
+        # Default values for direct configuration
         self._target_lat = self.setFloatFromConfig('target_lat', 0.0)
         self._target_lon = self.setFloatFromConfig('target_lon', 0.0)
         self._target_alt = self.setFloatFromConfig('target_alt', 0.0)
@@ -78,7 +85,10 @@ class CalculateGeometry(BaseNode):
         self._step_seconds = self.setFloatFromConfig('step_seconds', 60.0)  # Default to 1 minute steps
         self._storage_key = self.setStringFromConfig('storage_key', 'geometry_results')
         self._single_time_point = self.setBoolFromConfig('single_time_point', False)
-
+        
+        # Load TLE data from file
+        self.tle_data = self._load_tle_data()
+        
         self.env.process(self.run())
 
     @property
@@ -88,6 +98,79 @@ class CalculateGeometry(BaseNode):
     @property
     def storage_key(self) -> Optional[str]:
         return self._storage_key()
+
+    def _load_tle_data(self) -> Dict[str, Dict[str, str]]:
+        """
+        Load TLE data from JSON file.
+        
+        Returns:
+            Dictionary mapping satellite names to TLE data
+        """
+        import json
+        import os
+        
+        try:
+            tle_file = self._tle_file_path()
+            
+            # Check if file exists in multiple possible locations
+            possible_paths = [
+                tle_file,
+                os.path.join(os.path.dirname(__file__), tle_file),
+                os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', tle_file),
+                os.path.join(os.getcwd(), tle_file)
+            ]
+            
+            tle_data = {}
+            for path in possible_paths:
+                if os.path.exists(path):
+                    with open(path, 'r') as f:
+                        tle_data = json.load(f)
+                    self.logger.info(f"Loaded TLE data from: {path}")
+                    break
+            else:
+                # If no file found, create default TLE data
+                self.logger.warning(f"TLE file not found at any location. Using default ISS TLE data.")
+                tle_data = {
+                    "ISS": {
+                        "tle_line1": "1 25544U 98067A   25096.03700594  .00015269  00000+0  28194-3 0  9999",
+                        "tle_line2": "2 25544  51.6369 304.3678 0004922  13.5339 346.5781 15.49280872503978"
+                    }
+                }
+            
+            return tle_data
+            
+        except Exception as e:
+            self.logger.error(f"Error loading TLE data: {e}")
+            # Return default ISS TLE data as fallback
+            return {
+                "ISS": {
+                    "tle_line1": "1 25544U 98067A   25096.03700594  .00015269  00000+0  28194-3 0  9999",
+                    "tle_line2": "2 25544  51.6369 304.3678 0004922  13.5339 346.5781 15.49280872503978"
+                }
+            }
+
+    def _get_tle_for_satellite(self, satellite_name: str) -> Tuple[str, str]:
+        """
+        Get TLE lines for a given satellite name.
+        
+        Args:
+            satellite_name: Name of the satellite
+            
+        Returns:
+            Tuple of (tle_line1, tle_line2)
+        """
+        if satellite_name in self.tle_data:
+            tle_info = self.tle_data[satellite_name]
+            return tle_info.get('tle_line1', ''), tle_info.get('tle_line2', '')
+        else:
+            self.logger.warning(f"Satellite '{satellite_name}' not found in TLE data. Using ISS as fallback.")
+            if 'ISS' in self.tle_data:
+                tle_info = self.tle_data['ISS']
+                return tle_info.get('tle_line1', ''), tle_info.get('tle_line2', '')
+            else:
+                # Last resort fallback
+                return ("1 25544U 98067A   25096.03700594  .00015269  00000+0  28194-3 0  9999",
+                        "2 25544  51.6369 304.3678 0004922  13.5339 346.5781 15.49280872503978")
 
     def execute(self):
         """Simpy execution code"""
@@ -102,12 +185,12 @@ class CalculateGeometry(BaseNode):
                 delay = self.time_delay
 
                 # Get configuration values from input or defaults
-                tle_line1 = msg.get('tle_line1', self._tle_line1())
-                tle_line2 = msg.get('tle_line2', self._tle_line2())
-                target_lat = msg.get('target_lat', self._target_lat())
-                target_lon = msg.get('target_lon', self._target_lon())
-                target_alt = msg.get('target_alt', self._target_alt())
-                start_time_str = msg.get('start_time', self._start_time_str())
+                satellite_name = msg.get(self._satellite_name_key(), self._satellite_name())
+                tle_line1, tle_line2 = self._get_tle_for_satellite(satellite_name)
+                target_lat = msg.get(self._target_lat_key(), self._target_lat())
+                target_lon = msg.get(self._target_lon_key(), self._target_lon())
+                target_alt = msg.get(self._target_alt_key(), self._target_alt())
+                start_time_str = msg.get(self._start_time_key(), self._start_time_str())
                 duration_seconds = msg.get('duration_seconds', self._duration_seconds())
                 step_seconds = msg.get('step_seconds', self._step_seconds())
                 single_time_point = msg.get('single_time_point', self._single_time_point())
