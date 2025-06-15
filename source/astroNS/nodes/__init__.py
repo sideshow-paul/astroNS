@@ -19,3 +19,5 @@ from .core import *
 from .aerospace import *
 from .network import *
 from .pydantic_models import *
+from .two_six import *
+from .AI import *

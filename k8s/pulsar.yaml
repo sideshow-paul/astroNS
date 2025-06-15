@@ -74,12 +74,14 @@ spec:
     - port: 6650
       name: pulsar
       targetPort: pulsar
+      nodePort: 30000
     - port: 8080
       name: http
       targetPort: http
   selector:
     app: pulsar
     component: broker
+  type: NodePort
 ---
 apiVersion: v1
 kind: Namespace

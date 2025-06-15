@@ -39,6 +39,7 @@ class FileDataSource(BaseNode):
         self.file_name: str = configuration.get("file_name", "NOT_PROVIDED")
         self.delimiter: str = configuration.get("delimiter", ",")
         self.keys: list = configuration.get("file_keys", [])
+        self.generates_data_only: bool = True
 
         if self.file_name == "NOT_PROVIDED":
             print(self.log_prefix() + "ERROR. FileDataSource file_name not provided")
@@ -66,12 +67,14 @@ class FileDataSource(BaseNode):
                 # messages = csv.DictReader(in_file,delimiter=self.delimiter,quoting=csv.QUOTE_MINIMAL)
             elif ".xlsx" in self.file_name:
                 messages = pd.read_excel(in_file)
+            elif ".json" in self.file_name:
+                messages = pd.read_json(in_file)
             else:
                 print(
                     self.log_prefix()
-                    + f"ERROR. {self.file_name} is not either a CSV or Excel file."
+                    + f"ERROR. {self.file_name} is not either a CSV, JSON, or Excel file."
                 )
-                print("Please change input to be CSV or Excel.")
+                print("Please change input to be CSV, Excel, or JSON.")
 
             # old columns names to pull out SL data
             # sl_cols = [

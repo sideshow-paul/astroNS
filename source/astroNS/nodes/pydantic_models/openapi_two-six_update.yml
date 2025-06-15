@@ -1,0 +1,371 @@
+openapi: 3.0.3
+info:
+  title: SixGeo Simulator Pulsar Interface
+  version: "1.0.0"
+  description: |-
+    Defines the message formats for data flowing into and out of the 
+    SixGeo Simulator component via Apache Pulsar. 
+    This document uses OpenAPI to describe message schemas and conceptual operations 
+    on Pulsar topics.
+
+servers:
+  - url: pulsar://localhost:6650 # Replace with your actual Pulsar service URL
+    description: Apache Pulsar Broker
+
+tags:
+  - name: SimulatorInputs
+    description: "Messages sent TO the Simulator via its unified input topic."
+  - name: SimulatorOutputs
+    description: "Messages sent FROM the Simulator via its unified output topic."
+
+paths:
+  /persistent/twosix/sixgeo/simulator_input_topic:
+    post:
+      tags:
+        - SimulatorInputs
+      summary: "Publish a message to the Simulator's input topic."
+      description: |
+        An external component (Agent Framework or Agent Coordinator) publishes a `WrappedMessage` 
+        to the `persistent://twosix/sixgeo/simulator_input_topic`. The Simulator consumes these messages.
+        The `message_type` field in the `WrappedMessage` determines how the `payload` is interpreted.
+      operationId: publishToSimulatorInput
+      requestBody:
+        description: "The `WrappedMessage` to be sent to the Simulator."
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WrappedInputMessage'
+      responses:
+        '202': 
+          description: "Message successfully published to Pulsar topic."
+        '400':
+          description: "Invalid message format or payload structure."
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error: 
+                    type: string
+                    description: "Description of the error."
+
+  /persistent/twosix/sixgeo/simulator_output_topic: # Conceptual path for simulator's output
+    x-pulsar-topic: true # Custom extension to mark this as a Pulsar topic
+    description: |
+      This "path" represents the Pulsar topic `persistent://twosix/sixgeo/simulator_output_topic`
+      to which the Simulator publishes messages. Consumers subscribe to this topic directly
+      via Pulsar. The operations below describe the types of messages (events) that
+      can be expected on this topic.
+    # We can define a dummy operation here to hang callbacks off,
+    # or simply use this path as a way to group output message descriptions under components.
+    # For a more callback-centric approach:
+    x-event-source: # Custom marker indicating this path is an event source
+      # This section is conceptual for Pulsar within OpenAPI.
+      # Actual subscription happens via Pulsar client.
+      # The 'callbacks' will describe the messages received by a subscriber.
+      # We'll attach the callback to a conceptual "subscribe" operation.
+    post: # Conceptual operation to "register interest" or document subscription
+      tags:
+        - SimulatorOutputs
+      summary: "Conceptual subscription to Simulator output events."
+      description: |
+        This operation conceptually represents a component subscribing to the
+        `persistent://twosix/sixgeo/simulator_output_topic`. The actual messages
+        are received asynchronously by the Pulsar consumer. The `callbacks`
+        section describes these asynchronous messages.
+      operationId: subscribeToSimulatorOutput
+      callbacks:
+        onSimulatorMessage: # Name for the callback event
+          # The expression for the callback URL is tricky for non-HTTP contexts.
+          # For Pulsar, there isn't a callback URL. The "callback" is the Pulsar consumer's message handler.
+          # We use a placeholder or describe it textually.
+          # Let's define the message directly.
+          # '$runtime.pulsar.consumer': # This is a made-up expression
+          #   post: ...
+          # A simpler way for documentation might be to list events directly.
+          # Or define the callback on a specific event received.
+          # For now, let's attach the callback directly to define the message received.
+          # The key for the callback should be a runtime expression. Since we don't have one for Pulsar,
+          # we'll use a fixed name and describe its meaning.
+          "simulatorMessageEvent": # Fixed name for the event
+            post: # Message "POSTed" (sent) to the subscriber by Pulsar
+              requestBody:
+                description: "A wrapped message published by the Simulator."
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/WrappedOutputMessage'
+              responses:
+                '200': # From the perspective of the service that received the message
+                  description: "Message received and acknowledged by subscriber."
+      responses:
+        '202':
+          description: "Conceptual subscription accepted."
+
+
+# REMOVE THE TOP-LEVEL 'webhooks:' SECTION
+# webhooks:
+#   simulatorOutputEvent:
+#     post:
+#       tags:
+#         - SimulatorOutputs
+#       summary: "Event representing a message published by the Simulator."
+#       # ... (rest of old webhooks definition)
+
+
+components:
+  schemas:
+    # --- Wrapper Schemas ---
+    WrappedInputMessage:
+      type: object
+      description: "Wrapper for messages sent TO the Simulator."
+      properties:
+        message_type:
+          type: string
+          enum:
+            - "time_advance"
+            - "task_batch"
+          description: "Discriminator for the payload type."
+        payload:
+          oneOf:
+            - $ref: '#/components/schemas/SimTimeAdvanceCommandPayload'
+            - $ref: '#/components/schemas/SimTaskBatchPayload'
+          description: "The actual message payload."
+      required:
+        - message_type
+        - payload
+      discriminator:
+        propertyName: message_type
+        mapping:
+          "time_advance": '#/components/schemas/SimTimeAdvanceCommandPayload'
+          "task_batch": '#/components/schemas/SimTaskBatchPayload'
+
+    WrappedOutputMessage:
+      type: object
+      description: "Wrapper for messages sent FROM the Simulator."
+      properties:
+        message_type:
+          type: string
+          enum:
+            - "simulation_step_complete"
+            - "collected_target_data"
+          description: "Discriminator for the payload type."
+        payload:
+          oneOf:
+            - $ref: '#/components/schemas/SimulationStepCompletePayload'
+            - $ref: '#/components/schemas/CollectedTargetDataPayload'
+          description: "The actual message payload."
+      required:
+        - message_type
+        - payload
+      discriminator:
+        propertyName: message_type
+        mapping:
+          "simulation_step_complete": '#/components/schemas/SimulationStepCompletePayload'
+          "collected_target_data": '#/components/schemas/CollectedTargetDataPayload'
+
+    # --- Input Message Payloads (Consumed by Simulator) ---
+    SimTimeAdvanceCommandPayload:
+      title: SimTimeAdvanceCommand
+      type: object
+      description: "Payload for advancing simulation time. (Origin: Agent Coordinator - Go)"
+      properties:
+        TimeStepStartTime:
+          type: string
+          format: date-time 
+          description: "ISO 8601 UTC timestamp."
+        TimeStepEndTime:
+          type: string
+          format: date-time
+          description: "ISO 8601 UTC timestamp."
+      required:
+        - TimeStepStartTime
+        - TimeStepEndTime
+
+    SimTaskRequestStructure: 
+      title: SimTaskRequest
+      type: object
+      description: "Definition of a single task request within a batch. (Origin: Agent Framework - Python)"
+      properties:
+        task_id: 
+          type: string
+          description: "Agent-generated unique ID for this task attempt."
+        opportunity_id: 
+          type: string
+          description: "Original Opportunity ID."
+        original_task_id: 
+          type: string
+          description: "Original database Task ID."
+        agent_id: 
+          type: string 
+          description: "Agent ID responsible for this specific task (if different from batch agent_id, or for clarity)."
+        satellite_id: 
+          type: string
+          description: "Name/ID of the satellite."
+        target_id: 
+          type: string
+          description: "Original Target ID."
+        start_time: 
+          type: string
+          format: date-time
+          description: "Planned UTC start time of the task."
+        duration: 
+          type: number
+          format: double
+          description: "Planned duration in seconds."
+        priority: 
+          type: integer
+          description: "Task priority."
+        time_step_window: 
+          type: string
+          format: date-time
+          description: "The TimeStepEndTime this task is intended for."
+        task_type: 
+          type: string
+          default: "image_collect"
+          description: "Type of task, e.g., \"image_collect\"."
+        parameters:
+          type: object
+          additionalProperties: true
+          description: "Key-value parameters, e.g., aimpoint_latitude, aimpoint_longitude."
+          properties:
+            aimpoint_latitude: { type: number, format: double }
+            aimpoint_longitude: { type: number, format: double }
+      required:
+        - task_id
+        - opportunity_id
+        - original_task_id
+        - satellite_id
+        - target_id
+        - start_time
+        - duration
+        - priority
+        - time_step_window
+
+    SimTaskBatchPayload:
+      title: SimTaskBatch
+      type: object
+      description: "Payload for submitting a batch of tasks from an Agent. (Origin: Agent Framework - Python)"
+      properties:
+        agent_id:
+          type: string
+          description: "ID of the agent submitting the batch."
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimTaskRequestStructure'
+        time_step_end_time:
+          type: string
+          format: date-time
+          description: "The TimeStepEndTime this entire batch is associated with."
+      required:
+        - agent_id
+        - tasks
+        - time_step_end_time
+
+    # --- Output Message Payloads (Produced by Simulator) ---
+    SimulationStepCompletePayload:
+      title: SimulationStepComplete
+      type: object
+      description: "Signals the Simulator has completed processing up to a given time. (Origin: Simulator - Go)"
+      properties:
+        TimeStepEndTime:
+          type: string
+          format: date-time
+        Status:
+          type: string
+          enum: ["Completed", "Error"]
+        Message:
+          type: string
+          nullable: true
+          description: "Optional message, e.g., in case of an error."
+      required:
+        - TimeStepEndTime
+        - Status
+
+    CollectedTargetDataPayload:
+      title: CollectedTargetData
+      type: object
+      description: "Detailed results of a simulated collection event. (Origin: Simulator - Go. Field names follow Go struct JSON output, typically snake_case due to tags or PascalCase if no tags.)"
+      properties:
+        collected_target_data_id:
+          type: string
+          description: "Unique ID for this collection data record (UUID)."
+        assignment_id:
+          type: string
+          description: "Agent's original task_id for this attempt."
+        opportunity_id:
+          type: integer 
+          format: int64
+        task_id:
+          type: integer 
+          format: int64
+          description: "Original database Task ID."
+        target_id:
+          type: integer 
+          format: int64
+        satellite_name:
+          type: string
+        agent_id: 
+          type: string
+          description: "Agent who initiated the original task."
+        actual_collection_start_time: 
+            type: string
+            format: date-time
+        actual_collection_end_time:
+            type: string
+            format: date-time
+        aimpoint_latitude:
+          type: number
+          format: double
+        aimpoint_longitude:
+          type: number
+          format: double
+        simulated_success_status:
+          type: boolean
+        failure_reason:
+          type: string
+          nullable: true
+        simulated_quality_score:
+          type: number
+          format: double
+          nullable: true
+        simulated_gsd_cm:
+          type: number
+          format: double
+          nullable: true
+        simulated_cloud_cover_percent:
+          type: number
+          format: double
+          nullable: true
+        simulated_area_covered_sqkm:
+          type: number
+          format: double
+          nullable: true
+        collected_metrics: 
+            type: object
+            additionalProperties: true
+            nullable: true
+            description: "Additional metrics from the collection."
+        additional_sim_metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+          description: "Other simulation-specific metadata."
+        notes_from_simulator:
+          type: string
+          nullable: true
+          description: "General notes from the simulator."
+      required: 
+        - collected_target_data_id
+        - assignment_id
+        - opportunity_id
+        - task_id
+        - target_id
+        - satellite_name
+        - agent_id
+        - actual_collection_start_time
+        - actual_collection_end_time
+        - simulated_success_status

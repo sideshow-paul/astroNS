@@ -1,0 +1,177 @@
+<svg width="1400" height="2000" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Arrow marker definition -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+    
+    <!-- Drop shadow filter -->
+    <filter id="dropshadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="2" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Title -->
+  <text x="700" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#333">
+    SimpleSensorCollectionModel Network Flow
+  </text>
+  
+  <!-- Nodes -->
+  <!-- FromQueue -->
+  <rect x="550" y="80" width="300" height="80" rx="10" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="700" y="110" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1976d2">FromQueue</text>
+  <text x="700" y="130" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">PulsarTopicSource</text>
+  <text x="700" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">topic: my-topic</text>
+  
+  <!-- ParseTaskingMessage -->
+  <rect x="550" y="220" width="300" height="80" rx="10" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="700" y="250" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#7b1fa2">ParseTaskingMessage</text>
+  <text x="700" y="270" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">ParseJsonMessage</text>
+  <text x="700" y="285" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">pydantic: WrappedInputMessage</text>
+  
+  <!-- AdvanceSimulationTime (branch) -->
+  <rect x="250" y="360" width="300" height="80" rx="10" fill="#fff3e0" stroke="#f57c00" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="400" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#f57c00">AdvanceSimulationTime</text>
+  <text x="400" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">KeyDelayTime</text>
+  <text x="400" y="425" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">convert_unix_time: true</text>
+  
+  <!-- UplinkTime (branch) -->
+  <rect x="850" y="360" width="300" height="80" rx="10" fill="#e8f5e9" stroke="#388e3c" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="1000" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#388e3c">UplinkTime</text>
+  <text x="1000" y="410" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">RandomDistrib</text>
+  <text x="1000" y="425" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">result: uplinkTimeSecs</text>
+  
+  <!-- ConvertUplinkTimeToDateTime -->
+  <rect x="850" y="500" width="300" height="80" rx="10" fill="#fce4ec" stroke="#c2185b" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="1000" y="530" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#c2185b">ConvertUplinkTimeToDateTime</text>
+  <text x="1000" y="550" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">AddKeyValue</text>
+  <text x="1000" y="565" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">result: UplinkTime</text>
+  
+  <!-- ConvertAccessTimeToISO -->
+  <rect x="850" y="640" width="300" height="80" rx="10" fill="#e1f5fe" stroke="#0277bd" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="1000" y="670" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#0277bd">ConvertAccessTimeToISO</text>
+  <text x="1000" y="690" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">AddKeyValue</text>
+  <text x="1000" y="705" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">result: access_start_time_iso</text>
+  
+  <!-- CalculatePosition -->
+  <rect x="850" y="780" width="300" height="80" rx="10" fill="#f1f8e9" stroke="#689f38" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="1000" y="810" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#689f38">CalculatePosition</text>
+  <text x="1000" y="830" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">CalculateGeometry</text>
+  <text x="1000" y="845" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">storage: geometry_results</text>
+  
+  <!-- CalculateGSD -->
+  <rect x="850" y="920" width="300" height="80" rx="10" fill="#fff8e1" stroke="#ffa000" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="1000" y="950" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffa000">CalculateGSD</text>
+  <text x="1000" y="970" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">CalculateGSD</text>
+  <text x="1000" y="985" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">storage: gsd_m_per_px</text>
+  
+  <!-- DownlinkTime -->
+  <rect x="850" y="1060" width="300" height="80" rx="10" fill="#efebe9" stroke="#5d4037" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="1000" y="1090" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#5d4037">DownlinkTime</text>
+  <text x="1000" y="1110" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">RandomDistrib</text>
+  <text x="1000" y="1125" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">result: downlinkTimeSecs</text>
+  
+  <!-- ConvertDownlinkTimeToDateTime -->
+  <rect x="850" y="1200" width="300" height="80" rx="10" fill="#e8eaf6" stroke="#303f9f" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="1000" y="1230" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#303f9f">ConvertDownlinkTimeToDateTime</text>
+  <text x="1000" y="1250" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">AddKeyValue</text>
+  <text x="1000" y="1265" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">result: DownlinkTime</text>
+  
+  <!-- ProcessingTime -->
+  <rect x="850" y="1340" width="300" height="80" rx="10" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="1000" y="1370" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#6a1b9a">ProcessingTime</text>
+  <text x="1000" y="1390" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">RandomDistrib</text>
+  <text x="1000" y="1405" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">result: processingTimeSecs</text>
+  
+  <!-- ConvertProcessingTimeToDateTime -->
+  <rect x="850" y="1480" width="300" height="80" rx="10" fill="#e0f2f1" stroke="#00695c" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="1000" y="1510" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#00695c">ConvertProcessingTimeToDateTime</text>
+  <text x="1000" y="1530" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">AddKeyValue</text>
+  <text x="1000" y="1545" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">result: ProcessingTime</text>
+  
+  <!-- ProductDelivery -->
+  <rect x="550" y="1620" width="300" height="80" rx="10" fill="#ffebee" stroke="#c62828" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="700" y="1650" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#c62828">ProductDelivery</text>
+  <text x="700" y="1670" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">PulsarTopicSink</text>
+  <text x="700" y="1685" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">topic: simulator_output_topic</text>
+  
+  <!-- FinalNode -->
+  <rect x="550" y="1760" width="300" height="80" rx="10" fill="#eceff1" stroke="#37474f" stroke-width="2" filter="url(#dropshadow)"/>
+  <text x="700" y="1790" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#37474f">FinalNode</text>
+  <text x="700" y="1810" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#555">DelayTime</text>
+  <text x="700" y="1825" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#777">time_delay: 0</text>
+  
+  <!-- Connections with labeled arrows -->
+  <!-- FromQueue -> ParseTaskingMessage -->
+  <line x1="700" y1="160" x2="700" y2="220" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="720" y="195" font-family="Arial, sans-serif" font-size="14" fill="#666">ParseTaskingMessage: ~</text>
+  
+  <!-- ParseTaskingMessage -> AdvanceSimulationTime (conditional) -->
+  <path d="M 600 300 Q 400 330 400 360" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="350" y="340" font-family="Arial, sans-serif" font-size="14" fill="#666">AdvanceSimulationTime:</text>
+  <text x="350" y="355" font-family="Arial, sans-serif" font-size="12" fill="#888">successful_type == SimulatorControlMessage</text>
+  
+  <!-- ParseTaskingMessage -> UplinkTime (conditional) -->
+  <path d="M 800 300 Q 1000 330 1000 360" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="820" y="340" font-family="Arial, sans-serif" font-size="14" fill="#666">UplinkTime:</text>
+  <text x="820" y="355" font-family="Arial, sans-serif" font-size="12" fill="#888">successful_type == WrappedInputMessage</text>
+  
+  <!-- AdvanceSimulationTime -> FromQueue (loop back) -->
+  <path d="M 250 400 Q 100 400 100 120 Q 100 120 550 120" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="120" y="260" font-family="Arial, sans-serif" font-size="14" fill="#666">FromQueue: ~</text>
+  
+  <!-- UplinkTime -> ConvertUplinkTimeToDateTime -->
+  <line x1="1000" y1="440" x2="1000" y2="500" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1020" y="475" font-family="Arial, sans-serif" font-size="14" fill="#666">ConvertUplinkTimeToDateTime: ~</text>
+  
+  <!-- ConvertUplinkTimeToDateTime -> ConvertAccessTimeToISO -->
+  <line x1="1000" y1="580" x2="1000" y2="640" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1020" y="615" font-family="Arial, sans-serif" font-size="14" fill="#666">ConvertAccessTimeToISO: ~</text>
+  
+  <!-- ConvertAccessTimeToISO -> CalculatePosition -->
+  <line x1="1000" y1="720" x2="1000" y2="780" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1020" y="755" font-family="Arial, sans-serif" font-size="14" fill="#666">CalculatePosition: ~</text>
+  
+  <!-- CalculatePosition -> CalculateGSD -->
+  <line x1="1000" y1="860" x2="1000" y2="920" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1020" y="895" font-family="Arial, sans-serif" font-size="14" fill="#666">CalculateGSD: ~</text>
+  
+  <!-- CalculateGSD -> DownlinkTime -->
+  <line x1="1000" y1="1000" x2="1000" y2="1060" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1020" y="1035" font-family="Arial, sans-serif" font-size="14" fill="#666">DownlinkTime: ~</text>
+  
+  <!-- DownlinkTime -> ConvertDownlinkTimeToDateTime -->
+  <line x1="1000" y1="1140" x2="1000" y2="1200" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1020" y="1175" font-family="Arial, sans-serif" font-size="14" fill="#666">ConvertDownlinkTimeToDateTime: ~</text>
+  
+  <!-- ConvertDownlinkTimeToDateTime -> ProcessingTime -->
+  <line x1="1000" y1="1280" x2="1000" y2="1340" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1020" y="1315" font-family="Arial, sans-serif" font-size="14" fill="#666">ProcessingTime: ~</text>
+  
+  <!-- ProcessingTime -> ConvertProcessingTimeToDateTime -->
+  <line x1="1000" y1="1420" x2="1000" y2="1480" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="1020" y="1455" font-family="Arial, sans-serif" font-size="14" fill="#666">ConvertProcessingTimeToDateTime: ~</text>
+  
+  <!-- ConvertProcessingTimeToDateTime -> ProductDelivery -->
+  <path d="M 850 1540 Q 700 1580 700 1620" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="720" y="1585" font-family="Arial, sans-serif" font-size="14" fill="#666">ProductDelivery: ~</text>
+  
+  <!-- ProductDelivery -> FinalNode -->
+  <line x1="700" y1="1700" x2="700" y2="1760" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <text x="720" y="1735" font-family="Arial, sans-serif" font-size="14" fill="#666">FinalNode: ~</text>
+  
+  <!-- Legend -->
+  <rect x="50" y="1850" width="200" height="100" rx="5" fill="#f5f5f5" stroke="#999" stroke-width="1"/>
+  <text x="150" y="1875" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333">Legend</text>
+  <text x="60" y="1895" font-family="Arial, sans-serif" font-size="12" fill="#555">Node Type = Type field value</text>
+  <text x="60" y="1915" font-family="Arial, sans-serif" font-size="12" fill="#555">Arrow Label = Sub key value</text>
+  <text x="60" y="1935" font-family="Arial, sans-serif" font-size="12" fill="#555">~ = Empty/null value</text>
+</svg>

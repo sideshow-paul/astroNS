@@ -204,18 +204,21 @@ class PulsarTopicSource(BaseNode):
                 message = msg.data().decode('utf-8')
 
                 try:
-                    parsed_message = json.loads(message)
+                    message_data = json.loads(message)
+                    new_message = message_data
+                    new_message['json_data'] = message_data
                     id: str = str(uuid.uuid4())
-                    parsed_message['ID'] = id
-                    parsed_message[self.msg_size_key] = 10
-                    parsed_message['simtime_arrived'] = self.env.now
-                    print(self.log_prefix(parsed_message['ID']) + f"Received message: {message}")
+                    new_message['ID'] = id
+                    new_message[self.msg_size_key] = 10
+                    new_message['simtime_arrived'] = self.env.now
+                    print(self.log_prefix(new_message['ID']) + f"Received message: {message}")
                     #import pudb; pu.db
-                    simtime_of_msg = parsed_message.get(self.simtime_field_name, self.env.now)
+                    simtime_of_msg = new_message.get(self.simtime_field_name, self.env.now)
+                    print(self.log_prefix(new_message['ID']) + f"Simtime of message: {simtime_of_msg}")
                     time_to_send_data_out = simtime_of_msg - self.env.now
                     # delay_till_get_next_msg,
                     # time_to_send_data_out,
-                    yield self.poll_frequency_secs, time_to_send_data_out, [parsed_message]
+                    yield self.poll_frequency_secs, time_to_send_data_out, [new_message]
                 except json.JSONDecodeError as e:
                     print(self.log_prefix() + f"Error parsing JSON message: {e}")
                     print(self.log_prefix() + f"Raw message content: {message}")

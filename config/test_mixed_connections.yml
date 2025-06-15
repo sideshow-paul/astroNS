@@ -1,0 +1,61 @@
+# Test YAML with mixed connection types to verify label handling
+DEFAULT:
+  config: test
+
+StartNode:
+  type: Source
+  input_file: /data/input.txt
+  Process1: ~
+  Process2: condition == true
+  Process3: error_count > 5
+
+Process1:
+  type: BasicProcessor
+  algorithm: simple
+  Process4: ~
+  ErrorHandler: ~
+
+Process2:
+  type: ConditionalProcessor
+  threshold: 0.8
+  Process4: status == "complete"
+  Process5: status == "pending"
+
+Process3:
+  type: ErrorProcessor
+  max_retries: 3
+  ErrorHandler: retry_count >= max_retries
+  Process5: ~
+
+Process4:
+  type: MergeProcessor
+  merge_strategy: concatenate
+  OutputNode: ~
+
+Process5:
+  type: AlternativeProcessor
+  fallback_enabled: true
+  OutputNode: validation_passed == true
+  ErrorHandler: validation_passed == false
+
+ErrorHandler:
+  type: ErrorLogger
+  log_level: ERROR
+  send_alerts: true
+  AdminConsole: alert_severity == "critical"
+
+OutputNode:
+  type: DataWriter
+  output_path: /data/output.json
+  compression: gzip
+  FinalNode: ~
+
+AdminConsole:
+  type: MonitoringDashboard
+  port: 8080
+  refresh_rate: 60
+  FinalNode: ~
+
+FinalNode:
+  type: Terminator
+  cleanup: true

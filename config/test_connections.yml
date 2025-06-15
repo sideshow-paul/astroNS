@@ -1,0 +1,37 @@
+# Test YAML to verify connection parsing
+DEFAULT:
+  test: value
+
+Node1:
+  type: Type1
+  property1: value1
+  Node2: ~
+  Node3: condition == true
+  Node4: some_value
+
+Node2:
+  type: Type2
+  property2: value2
+  Node5: ~
+  Node6: another_condition
+
+Node3:
+  type: Type3
+  property3: value3
+  Node6: ~
+
+Node4:
+  type: Type4
+  property4: value4
+  Node5: status == ready
+  Node6: error_count > 0
+
+Node5:
+  type: Type5
+  property5: value5
+  Node6: ~
+
+Node6:
+  type: Type6
+  property6: value6
+  final: true

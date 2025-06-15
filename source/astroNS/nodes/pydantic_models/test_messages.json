@@ -1,0 +1,158 @@
+[
+  {
+    "message_type": "task_batch",
+    "payload": {
+      "agent_id": "agent_001",
+      "tasks": [
+        {
+          "task_id": "task_001_agent_001_2024010112",
+          "opportunity_id": "opp_123456",
+          "original_task_id": "db_task_789",
+          "agent_id": "agent_001",
+          "satellite_id": "SAT_WORLDVIEW_3",
+          "target_id": "tgt_456789",
+          "start_time": "2024-01-01T12:00:00Z",
+          "duration": 1.0,
+          "priority": 8,
+          "time_step_window": "2024-01-01T12:30:00Z",
+          "task_type": "image_collect",
+          "parameters": {
+            "aimpoint_latitude": 37.7749,
+            "aimpoint_longitude": -122.4194,
+            "collection_mode": "panchromatic",
+            "off_nadir_angle": 15.5,
+            "sun_elevation_angle": 45.2
+          }
+        },
+        {
+          "task_id": "task_002_agent_001_2024010112",
+          "opportunity_id": "opp_123457",
+          "original_task_id": "db_task_790",
+          "agent_id": "agent_001",
+          "satellite_id": "SAT_WORLDVIEW_3",
+          "target_id": "tgt_456790",
+          "start_time": "2024-01-01T12:05:00Z",
+          "duration": 1.0,
+          "priority": 6,
+          "time_step_window": "2024-01-01T12:30:00Z",
+          "task_type": "image_collect",
+          "parameters": {
+            "aimpoint_latitude": 40.7128,
+            "aimpoint_longitude": -74.006,
+            "collection_mode": "multispectral",
+            "off_nadir_angle": 22.3,
+            "sun_elevation_angle": 42.8
+          }
+        }
+      ],
+      "time_step_end_time": "2024-01-01T12:30:00Z"
+    }
+  },
+  {
+    "message_type": "task_batch",
+    "payload": {
+      "agent_id": "agent_002",
+      "tasks": [
+        {
+          "task_id": "task_003_agent_002_2024010112",
+          "opportunity_id": "opp_234567",
+          "original_task_id": "db_task_891",
+          "agent_id": "agent_002",
+          "satellite_id": "SAT_PLEIADES_1A",
+          "target_id": "tgt_567890",
+          "start_time": "2024-01-01T12:10:00Z",
+          "duration": 1.0,
+          "priority": 10,
+          "time_step_window": "2024-01-01T12:30:00Z",
+          "task_type": "image_collect",
+          "parameters": {
+            "aimpoint_latitude": 48.8566,
+            "aimpoint_longitude": 2.3522,
+            "collection_mode": "panchromatic",
+            "off_nadir_angle": 8.2,
+            "sun_elevation_angle": 38.5,
+            "ground_sample_distance": 0.5
+          }
+        },
+        {
+          "task_id": "task_004_agent_002_2024010112",
+          "opportunity_id": "opp_234568",
+          "original_task_id": "db_task_892",
+          "agent_id": "agent_002",
+          "satellite_id": "SAT_PLEIADES_1A",
+          "target_id": "tgt_567891",
+          "start_time": "2024-01-01T12:15:00Z",
+          "duration": 1.0,
+          "priority": 7,
+          "time_step_window": "2024-01-01T12:30:00Z",
+          "task_type": "image_collect",
+          "parameters": {
+            "aimpoint_latitude": 51.5074,
+            "aimpoint_longitude": -0.1278,
+            "collection_mode": "multispectral",
+            "off_nadir_angle": 18.9,
+            "sun_elevation_angle": 36.2
+          }
+        },
+        {
+          "task_id": "task_005_agent_002_2024010112",
+          "opportunity_id": "opp_234569",
+          "original_task_id": "db_task_893",
+          "agent_id": "agent_002",
+          "satellite_id": "SAT_PLEIADES_1A",
+          "target_id": "tgt_567892",
+          "start_time": "2024-01-01T12:20:00Z",
+          "duration": 1.0,
+          "priority": 5,
+          "time_step_window": "2024-01-01T12:30:00Z",
+          "task_type": "image_collect",
+          "parameters": {
+            "aimpoint_latitude": 35.6762,
+            "aimpoint_longitude": 139.6503,
+            "collection_mode": "panchromatic",
+            "off_nadir_angle": 25.6,
+            "sun_elevation_angle": 52.1
+          }
+        }
+      ],
+      "time_step_end_time": "2024-01-01T12:30:00Z"
+    }
+  },
+  {
+    "message_type": "task_batch",
+    "payload": {
+      "agent_id": "agent_003",
+      "tasks": [
+        {
+          "task_id": "task_006_agent_003_2024010112",
+          "opportunity_id": "opp_345678",
+          "original_task_id": "db_task_994",
+          "agent_id": "agent_003",
+          "satellite_id": "SAT_WORLDVIEW_2",
+          "target_id": "tgt_678901",
+          "start_time": "2024-01-01T12:08:00Z",
+          "duration": 1.0,
+          "priority": 9,
+          "time_step_window": "2024-01-01T12:30:00Z",
+          "task_type": "image_collect",
+          "parameters": {
+            "aimpoint_latitude": -33.8688,
+            "aimpoint_longitude": 151.2093,
+            "collection_mode": "8-band-multispectral",
+            "off_nadir_angle": 12.4,
+            "sun_elevation_angle": 68.9,
+            "atmospheric_correction": true
+          }
+        }
+      ],
+      "time_step_end_time": "2024-01-01T12:30:00Z"
+    }
+  },
+  {
+    "message_type": "time_advance",
+    "payload": {
+      "TimeStepStartTime": "2024-01-01T12:00:00Z",
+      "TimeStepEndTime": "2024-01-01T12:30:00Z"
+    }
+  }
+]

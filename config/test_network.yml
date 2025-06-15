@@ -1,0 +1,163 @@
+# Test network configuration with multiple nodes to test layout
+DEFAULT:
+  msg_size_key: size_mbits
+  seed: 42
+
+InputSource:
+  type: FileSource
+  file_path: /data/input.json
+  batch_size: 100
+  timeout: 30.0
+  retry_attempts: 3
+  ParseMessage: ~
+
+ParseMessage:
+  type: JsonParser
+  schema_validation: true
+  error_handling: skip
+  max_errors: 10
+  output_format: dict
+  ValidateData: ~
+  LogErrors: error_count > 0
+
+ValidateData:
+  type: DataValidator
+  rules:
+    - field: timestamp
+      type: datetime
+      required: true
+    - field: value
+      type: float
+      min: 0.0
+      max: 100.0
+  strict_mode: false
+  TransformData: validation_passed == true
+  RejectData: validation_passed == false
+
+LogErrors:
+  type: ErrorLogger
+  log_level: ERROR
+  include_stacktrace: true
+  max_log_size_mb: 100
+  InputSource: ~
+
+TransformData:
+  type: DataTransformer
+  transformations:
+    - normalize_values
+    - add_metadata
+    - calculate_derived
+  parallel_processing: true
+  num_workers: 4
+  EnrichData: ~
+
+RejectData:
+  type: RejectedDataHandler
+  storage_path: /data/rejected/
+  include_reason: true
+  max_storage_gb: 50
+  AlertSystem: rejection_rate > 0.1
+
+EnrichData:
+  type: DataEnricher
+  external_api: https://api.example.com
+  cache_enabled: true
+  cache_ttl_seconds: 3600
+  retry_on_failure: true
+  ProcessData: ~
+
+AlertSystem:
+  type: AlertManager
+  channels:
+    - email
+    - slack
+    - pagerduty
+  severity_levels:
+    - CRITICAL
+    - WARNING
+  rate_limit_per_hour: 10
+  AdminDashboard: ~
+
+ProcessData:
+  type: DataProcessor
+  algorithms:
+    - moving_average
+    - outlier_detection
+    - trend_analysis
+  window_size: 100
+  confidence_level: 0.95
+  StoreResults: ~
+  GenerateReports: ~
+
+StoreResults:
+  type: DatabaseWriter
+  connection_string: postgresql://localhost/results
+  batch_insert: true
+  batch_size: 1000
+  compression: gzip
+  retention_days: 365
+  ArchiveOldData: age_days > 30
+
+GenerateReports:
+  type: ReportGenerator
+  formats:
+    - pdf
+    - html
+    - csv
+  template_path: /templates/
+  include_charts: true
+  EmailReports: ~
+  PublishDashboard: ~
+
+ArchiveOldData:
+  type: DataArchiver
+  archive_path: /archive/
+  compression_level: 9
+  verify_archive: true
+  delete_after_archive: true
+  NotifyCompletion: ~
+
+EmailReports:
+  type: EmailSender
+  smtp_server: smtp.example.com
+  smtp_port: 587
+  use_tls: true
+  recipients:
+    - reports@example.com
+    - analytics@example.com
+  attach_reports: true
+  FinalStep: ~
+
+PublishDashboard:
+  type: DashboardPublisher
+  dashboard_url: https://dashboard.example.com
+  update_frequency: 300
+  include_realtime: true
+  authentication_required: true
+  FinalStep: ~
+
+AdminDashboard:
+  type: AdminInterface
+  port: 8080
+  enable_ssl: true
+  ssl_cert_path: /certs/admin.crt
+  ssl_key_path: /certs/admin.key
+  allowed_ips:
+    - 10.0.0.0/8
+    - 192.168.0.0/16
+  FinalStep: ~
+
+NotifyCompletion:
+  type: NotificationService
+  notification_types:
+    - webhook
+    - sns
+  webhook_url: https://webhooks.example.com/archive
+  sns_topic_arn: arn:aws:sns:us-east-1:123456789:archive-complete
+  FinalStep: ~
+
+FinalStep:
+  type: Terminator
+  cleanup_temp_files: true
+  log_summary: true
+  exit_code: 0

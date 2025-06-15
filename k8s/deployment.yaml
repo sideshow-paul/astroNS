@@ -56,9 +56,10 @@ spec:
 #   selector:
 #     app: astrons
 #   ports:
-#   - port: 8080
-#     targetPort: 8080
-#   type: ClusterIP
+#     - port: 6650
+#       targetPort: 6650
+#       nodePort: 30000
+#   type: NodePort
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

@@ -7,11 +7,76 @@ This guide provides instructions for building a Docker image of the astroNS proj
 - Docker installed
 - Kubernetes cluster configured (minikube, kind, or cloud provider)
 - kubectl installed and configured
-- Helm (optional, for Pulsar deployment via charts)
+- curl (for Pulsar Manager setup)
+
+## Deployment Scripts
+
+This directory contains several deployment scripts for different use cases:
+
+### Main Deployment Scripts
+
+- **`deploy.sh`** - Main deployment script that deploys both Pulsar and AstroNS
+- **`takedown.sh`** - Main takedown script that removes both AstroNS and Pulsar
+
+### Pulsar-Only Scripts
+
+- **`deploy_pulsar.sh`** - Deploy only Apache Pulsar with Pulsar Manager
+- **`takedown_pulsar.sh`** - Remove only Apache Pulsar and related components
+
+## Quick Start
+
+### Deploy Everything (Recommended)
+
+To deploy the complete stack (Pulsar + AstroNS):
+
+```bash
+# From the project root directory
+./k8s/deploy.sh
+```
+
+This script will:
+1. Check prerequisites (kubectl, Docker)
+2. Build the AstroNS Docker image if needed
+3. Deploy Apache Pulsar with Pulsar Manager
+4. Deploy AstroNS application
+5. Set up Pulsar Manager with admin user
+
+### Deploy Only Pulsar
+
+If you only want to deploy Pulsar:
+
+```bash
+# From the project root directory
+./k8s/deploy_pulsar.sh
+
+# Or from the k8s directory
+cd k8s && ./deploy_pulsar.sh
+```
+
+### Remove Everything
+
+To remove all deployed resources:
+
+```bash
+# From the project root directory
+./k8s/takedown.sh
+```
+
+### Remove Only Pulsar
+
+To remove only Pulsar while keeping AstroNS:
+
+```bash
+# From the project root directory
+./k8s/takedown_pulsar.sh
+
+# Or from the k8s directory
+cd k8s && ./takedown_pulsar.sh
+```
 
 ## Building the Docker Image
 
-From the root directory of the astroNS project, build the Docker image:
+The deployment script will automatically build the Docker image if it doesn't exist. To build manually:
 
 ```bash
 docker build -t astrons:latest .
@@ -24,82 +89,72 @@ docker tag astrons:latest your-registry/astrons:latest
 docker push your-registry/astrons:latest
 ```
 
-## Deploying to Kubernetes
+Then update `k8s/deployment.yaml` to use your registry image.
 
-### 1. Update Image Reference (if using a registry)
+## Accessing Services
 
-Edit `k8s/deployment.yaml` and replace:
+### Pulsar Manager UI
 
-```yaml
-image: astrons:latest
+After deployment, the script will display the Pulsar Manager access information:
+
+```
+Pulsar Manager UI is available at: http://<NODE_IP>:30527
+Username: admin
+Password: apachepulsar
 ```
 
-with
+To add the Pulsar environment in the UI:
+- Name: pulsar-local
+- Service URL: http://pulsar-broker:8080
+- Broker URL for WebSocket: ws://pulsar-broker:8080
 
-```yaml
-image: your-registry/astrons:latest
-```
+### Monitoring Deployments
 
-### 2. Deploy Apache Pulsar
-
-First, create the Pulsar namespace:
+Check the status of your deployments:
 
 ```bash
-kubectl apply -f k8s/pulsar.yaml
+# Check AstroNS pods
+kubectl get pods -l app=astrons
+
+# Check Pulsar pods
+kubectl get pods -n pulsar
+
+# View AstroNS logs
+kubectl logs -l app=astrons
+
+# View Pulsar broker logs
+kubectl logs -n pulsar -l app=pulsar,component=broker
 ```
 
-Wait for the Pulsar broker to be ready:
+## Manual Deployment (Alternative)
+
+If you prefer to deploy manually without the scripts:
+
+### 1. Deploy Apache Pulsar
 
 ```bash
-kubectl wait --for=condition=ready pod -l app=pulsar,component=broker -n pulsar --timeout=300s
+kubectl create namespace pulsar
+kubectl apply -f k8s/pulsar-config.yaml -n pulsar
+kubectl apply -f k8s/pulsar.yaml -n pulsar
 ```
 
-### 3. Create the Kubernetes Resources for astroNS
+Wait for Pulsar to be ready:
 
-Apply the ConfigMap first:
+```bash
+kubectl wait --for=condition=ready pod -l app=pulsar,component=broker -n pulsar --timeout=600s
+```
+
+### 2. Deploy AstroNS
 
 ```bash
 kubectl apply -f k8s/configmap.yaml
-```
-
-Then deploy the application:
-
-```bash
 kubectl apply -f k8s/deployment.yaml
 ```
 
-### 4. Verify Deployment
-
-Check if the pod is running:
+Wait for AstroNS to be ready:
 
 ```bash
-kubectl get pods -l app=astrons
-```
-
-View pod logs:
-
-```bash
-kubectl logs -l app=astrons
-```
-
-Check Pulsar service:
-
-```bash
-kubectl get pods -n pulsar
-kubectl logs -l app=pulsar,component=broker -n pulsar
-```
-
-### 4. Accessing Results
-
-The simulation results are stored in the persistent volume. To access them, you can:
-
-- Create a pod that mounts the same PVC and copy files from there
-- Set up a data transfer job to copy results to another location
-
-Example to copy results:
-
-```bash
-kubectl cp <pod-name>:/app/Results ./local-results
+kubectl wait --for=condition=ready pod -l app=astrons --timeout=300s
 ```
 
 ## Customizing the Deployment
@@ -110,7 +165,7 @@ Edit the `k8s/configmap.yaml` file to change simulation parameters.
 
 ### Scaling
 
-To run multiple simulations, increase the number of replicas:
+To run multiple simulations:
 
 ```bash
 kubectl scale deployment astrons --replicas=3
@@ -120,31 +175,46 @@ kubectl scale deployment astrons --replicas=3
 
 Modify CPU and memory requests/limits in `k8s/deployment.yaml` according to your simulation needs.
 
+### Storage Class
+
+The scripts automatically detect and use available StorageClasses. If you need a specific one, edit `k8s/deployment.yaml`.
+
+## Accessing Results
+
+The simulation results are stored in the persistent volume. To access them:
+
+```bash
+# Copy results from pod to local machine
+kubectl cp <pod-name>:/app/Results ./local-results
+
+# Or exec into the pod
+kubectl exec -it <pod-name> -- /bin/bash
+```
+
 ## Troubleshooting
 
-### Pod Fails to Start
+### Deployment Issues
 
-Check events:
+If deployment fails:
 
-```bash
-kubectl describe pod <pod-name>
-```
+1. Check cluster connectivity:
+   ```bash
+   kubectl cluster-info
+   ```
 
-### Resource Issues
+2. Check available storage classes:
+   ```bash
+   kubectl get storageclass
+   ```
 
-If pods are evicted or OOM killed, increase the resource limits in the deployment file.
-
-### ConfigMap Updates
-
-After updating the ConfigMap, you need to restart the pods:
-
-```bash
-kubectl rollout restart deployment astrons
-```
+3. View pod events:
+   ```bash
+   kubectl describe pod <pod-name>
+   ```
 
 ### Pulsar Connectivity Issues
 
-If the astroNS application cannot connect to Pulsar:
+If AstroNS cannot connect to Pulsar:
 
 1. Verify Pulsar is running:
    ```bash
@@ -153,52 +223,77 @@ If the astroNS application cannot connect to Pulsar:
 
 2. Check Pulsar logs:
    ```bash
-   kubectl logs -l app=pulsar,component=broker -n pulsar
+   kubectl logs -n pulsar -l app=pulsar,component=broker
    ```
 
-3. Check network connectivity:
+3. Test connectivity:
    ```bash
    kubectl exec -it <astrons-pod-name> -- nc -zv pulsar-broker.pulsar.svc.cluster.local 6650
    ```
 
-4. Verify the Pulsar connection URL in `SimpleSensorCollectionModel.yml`
+### Script Permissions
 
-## Advanced: Using Kubernetes Jobs
+If you get permission errors, make the scripts executable:
 
-For one-time simulations, consider using Kubernetes Jobs instead of Deployments. Create a `job.yaml` file based on the deployment template with appropriate modifications.
+```bash
+chmod +x k8s/*.sh
+```
+
+### Resource Constraints
+
+If pods are evicted or OOM killed:
+
+1. Increase resource limits in `k8s/deployment.yaml`
+2. Check cluster resource availability:
+   ```bash
+   kubectl top nodes
+   kubectl describe nodes
+   ```
 
 ## Pulsar Management
 
-### Accessing the Pulsar Admin UI
-
-The Pulsar Admin UI is available at port 8080. To access it:
+### Creating Topics Manually
 
 ```bash
-# Port forward the Pulsar Admin UI
-kubectl port-forward -n pulsar svc/pulsar-broker 8080:8080
-```
+# Access Pulsar admin
+kubectl exec -it -n pulsar pulsar-broker-0 -- /bin/bash
 
-Then access http://localhost:8080 in your browser.
-
-### Creating Topics
-
-To create topics in Pulsar:
-
-```bash
-# Enter the Pulsar pod
-kubectl exec -it -n pulsar statefulset/pulsar-broker -- /bin/bash
-
-# Create a topic
-./bin/pulsar-admin topics create persistent://public/default/my-topic
-./bin/pulsar-admin topics create persistent://public/default/sim_output
+# Create topics
+./bin/pulsar-admin topics create-partitioned-topic -p 1 persistent://public/default/my-topic
+./bin/pulsar-admin topics create-partitioned-topic -p 1 persistent://public/default/sim_output
 ```
 
 ### Viewing Topic Activity
 
 ```bash
-# View topics
+# List topics
 ./bin/pulsar-admin topics list public/default
 
-# View producers
+# View topic stats
 ./bin/pulsar-admin topics stats persistent://public/default/my-topic
+```
+
+## Advanced Usage
+
+### Running as Kubernetes Jobs
+
+For one-time simulations, consider using Kubernetes Jobs. Create a job configuration based on the deployment template.
+
+### Multi-Environment Setup
+
+You can deploy to different namespaces for multiple environments:
+
+```bash
+# Deploy to staging namespace
+kubectl create namespace staging
+kubectl apply -f k8s/configmap.yaml -n staging
+kubectl apply -f k8s/deployment.yaml -n staging
+```
+
+### Backup and Recovery
+
+To backup your configuration:
+
+```bash
+kubectl get configmap astrons-config -o yaml > backup-config.yaml
 ```

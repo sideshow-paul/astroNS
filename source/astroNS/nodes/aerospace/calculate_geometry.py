@@ -71,24 +71,36 @@ class CalculateGeometry(BaseNode):
         self._satellite_name = self.setStringFromConfig('satellite_name', 'ISS')
         self._satellite_name_key = self.setStringFromConfig('satellite_name_key', 'satellite_name')
         self._tle_file_path = self.setStringFromConfig('tle_file_path', 'satellites.json')
+
         self._target_lat_key = self.setStringFromConfig('target_lat_key', 'target_lat')
         self._target_lon_key = self.setStringFromConfig('target_lon_key', 'target_lon')
         self._target_alt_key = self.setStringFromConfig('target_alt_key', 'target_alt')
+
+        self._parameters_key = self.setStringFromConfig('parameters_key', '')
+
+        if self._parameters_key:
+            self._parameters = configuration.get(self._parameters_key, {})
+            self._target_lat = self._parameters.get(self._target_lat_key, 0.0)
+            self._target_lon = self._parameters.get(self._target_lon_key, 0.0)
+            self._target_alt = self._parameters.get(self._target_alt_key, 0.0)
+        else:
+            self._target_lat = self.setFloatFromConfig(self._target_lat_key, 0.0)
+            self._target_lon = self.setFloatFromConfig(self._target_lon_key, 0.0)
+            self._target_alt = self.setFloatFromConfig(self._target_alt_key, 0.0)
+
         self._start_time_key = self.setStringFromConfig('start_time_key', 'start_time')
-        
+
         # Default values for direct configuration
-        self._target_lat = self.setFloatFromConfig('target_lat', 0.0)
-        self._target_lon = self.setFloatFromConfig('target_lon', 0.0)
-        self._target_alt = self.setFloatFromConfig('target_alt', 0.0)
+
         self._start_time_str = self.setStringFromConfig('start_time', datetime.now(timezone.utc).isoformat())
         self._duration_seconds = self.setFloatFromConfig('duration_seconds', 3600.0)  # Default to 1 hour
         self._step_seconds = self.setFloatFromConfig('step_seconds', 60.0)  # Default to 1 minute steps
         self._storage_key = self.setStringFromConfig('storage_key', 'geometry_results')
         self._single_time_point = self.setBoolFromConfig('single_time_point', False)
-        
+
         # Load TLE data from file
         self.tle_data = self._load_tle_data()
-        
+
         self.env.process(self.run())
 
     @property
@@ -102,16 +114,16 @@ class CalculateGeometry(BaseNode):
     def _load_tle_data(self) -> Dict[str, Dict[str, str]]:
         """
         Load TLE data from JSON file.
-        
+
         Returns:
             Dictionary mapping satellite names to TLE data
         """
         import json
         import os
-        
+
         try:
             tle_file = self._tle_file_path()
-            
+
             # Check if file exists in multiple possible locations
             possible_paths = [
                 tle_file,
@@ -119,7 +131,7 @@ class CalculateGeometry(BaseNode):
                 os.path.join(os.path.dirname(__file__), '..', '..', '..', 'data', tle_file),
                 os.path.join(os.getcwd(), tle_file)
             ]
-            
+
             tle_data = {}
             for path in possible_paths:
                 if os.path.exists(path):
@@ -136,9 +148,9 @@ class CalculateGeometry(BaseNode):
                         "tle_line2": "2 25544  51.6369 304.3678 0004922  13.5339 346.5781 15.49280872503978"
                     }
                 }
-            
+
             return tle_data
-            
+
         except Exception as e:
             self.logger.error(f"Error loading TLE data: {e}")
             # Return default ISS TLE data as fallback
@@ -152,10 +164,10 @@ class CalculateGeometry(BaseNode):
     def _get_tle_for_satellite(self, satellite_name: str) -> Tuple[str, str]:
         """
         Get TLE lines for a given satellite name.
-        
+
         Args:
             satellite_name: Name of the satellite
-            
+
         Returns:
             Tuple of (tle_line1, tle_line2)
         """
@@ -187,9 +199,9 @@ class CalculateGeometry(BaseNode):
                 # Get configuration values from input or defaults
                 satellite_name = msg.get(self._satellite_name_key(), self._satellite_name())
                 tle_line1, tle_line2 = self._get_tle_for_satellite(satellite_name)
-                target_lat = msg.get(self._target_lat_key(), self._target_lat())
-                target_lon = msg.get(self._target_lon_key(), self._target_lon())
-                target_alt = msg.get(self._target_alt_key(), self._target_alt())
+                target_lat = msg.get(self._target_lat_key(), self._target_lat)
+                target_lon = msg.get(self._target_lon_key(), self._target_lon)
+                target_alt = msg.get(self._target_alt_key(), self._target_alt)
                 start_time_str = msg.get(self._start_time_key(), self._start_time_str())
                 duration_seconds = msg.get('duration_seconds', self._duration_seconds())
                 step_seconds = msg.get('step_seconds', self._step_seconds())
@@ -221,6 +233,8 @@ class CalculateGeometry(BaseNode):
 
                     # Store geometry results in message
                     msg[self.storage_key] = geometry_results
+
+                    msg['geo_polygon'] = [ [target_lat+0.1, target_lon], [target_lat, target_lon+0.1], [target_lat-0.1, target_lon], [target_lat, target_lon-0.1]]
 
                     print(
                         self.log_prefix(msg.get("ID", "unknown"))

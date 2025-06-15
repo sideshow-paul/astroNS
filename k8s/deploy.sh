@@ -223,51 +223,51 @@ PULSAR_MANAGER_UI_PORT=$(kubectl get svc pulsar-manager -n pulsar -o jsonpath='{
 PULSAR_MANAGER_API_PORT=$(kubectl get svc pulsar-manager -n pulsar -o jsonpath='{.spec.ports[?(@.name=="backend")].nodePort}')
 NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
 
-if [ -n "$PULSAR_MANAGER_UI_PORT" ]; then
-    echo -e "${GREEN}Pulsar Manager UI is available at:${NC}"
-    echo -e "http://$NODE_IP:$PULSAR_MANAGER_UI_PORT"
-    echo -e "${YELLOW}Setting up initial admin user...${NC}"
+# if [ -n "$PULSAR_MANAGER_UI_PORT" ]; then
+#     echo -e "${GREEN}Pulsar Manager UI is available at:${NC}"
+#     echo -e "http://$NODE_IP:$PULSAR_MANAGER_UI_PORT"
+#     echo -e "${YELLOW}Setting up initial admin user...${NC}"
 
-    # Wait for the Pulsar Manager API to be ready
-    echo -e "${YELLOW}Waiting for Pulsar Manager API to be ready...${NC}"
-    kubectl wait --for=condition=ready pod -l app=pulsar,component=manager -n pulsar --timeout=180s
+#     # Wait for the Pulsar Manager API to be ready
+#     echo -e "${YELLOW}Waiting for Pulsar Manager API to be ready...${NC}"
+#     kubectl wait --for=condition=ready pod -l app=pulsar,component=manager -n pulsar --timeout=180s
 
-    # Create the initial admin user using CSRF token approach
-    echo -e "${YELLOW}Creating admin user for Pulsar Manager...${NC}"
+#     # Create the initial admin user using CSRF token approach
+#     echo -e "${YELLOW}Creating admin user for Pulsar Manager...${NC}"
 
-    # Wait a bit for the service to be fully ready
-    sleep 20
+#     # Wait a bit for the service to be fully ready
+#     sleep 20
 
-    # Get CSRF token and create admin user
-    echo -e "${YELLOW}Getting CSRF token and creating admin user...${NC}"
-    CSRF_TOKEN=$(curl -s http://$NODE_IP:$PULSAR_MANAGER_API_PORT/pulsar-manager/csrf-token)
-    echo "CSRF Token: $CSRF_TOKEN"
-    
-    if [ -z "$CSRF_TOKEN" ]; then
-        echo -e "${YELLOW}Could not retrieve CSRF token, trying again...${NC}"
-        sleep 10
-        CSRF_TOKEN=$(curl -s http://$NODE_IP:$PULSAR_MANAGER_API_PORT/pulsar-manager/csrf-token)
-        echo "CSRF Token: $CSRF_TOKEN"
-    fi
-    
-    # Create the admin user with CSRF token
-    echo -e "${YELLOW}Creating admin user with CSRF token...${NC}"
-    curl -s \
-      -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
-      -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN;" \
-      -H "Content-Type: application/json" \
-      -X PUT http://$NODE_IP:$PULSAR_MANAGER_API_PORT/pulsar-manager/users/superuser \
-      -d '{"name": "admin", "password": "apachepulsar", "description": "Administrator", "email": "admin@example.org"}'
+#     # Get CSRF token and create admin user
+#     echo -e "${YELLOW}Getting CSRF token and creating admin user...${NC}"
+#     CSRF_TOKEN=$(curl -s http://$NODE_IP:$PULSAR_MANAGER_API_PORT/pulsar-manager/csrf-token)
+#     echo "CSRF Token: $CSRF_TOKEN"
 
-    echo ""
+#     if [ -z "$CSRF_TOKEN" ]; then
+#         echo -e "${YELLOW}Could not retrieve CSRF token, trying again...${NC}"
+#         sleep 10
+#         CSRF_TOKEN=$(curl -s http://$NODE_IP:$PULSAR_MANAGER_API_PORT/pulsar-manager/csrf-token)
+#         echo "CSRF Token: $CSRF_TOKEN"
+#     fi
 
-    echo -e "${GREEN}Pulsar Manager initial setup complete${NC}"
-    echo -e "${YELLOW}Access the Pulsar Manager UI at http://$NODE_IP:$PULSAR_MANAGER_UI_PORT${NC}"
-    echo -e "${YELLOW}Log in with:${NC}"
-    echo -e "  Username: admin"
-    echo -e "  Password: apachepulsar"
-    echo -e "${YELLOW}After logging in, add a new environment with these settings:${NC}"
-    echo -e "  Name: pulsar-local"
-    echo -e "  Service URL: http://pulsar-broker:8080"
-    echo -e "  Broker URL for WebSocket: ws://pulsar-broker:8080"
-fi
+#     # Create the admin user with CSRF token
+#     echo -e "${YELLOW}Creating admin user with CSRF token...${NC}"
+#     curl -s \
+#       -H "X-XSRF-TOKEN: $CSRF_TOKEN" \
+#       -H "Cookie: XSRF-TOKEN=$CSRF_TOKEN;" \
+#       -H "Content-Type: application/json" \
+#       -X PUT http://$NODE_IP:$PULSAR_MANAGER_API_PORT/pulsar-manager/users/superuser \
+#       -d '{"name": "admin", "password": "apachepulsar", "description": "Administrator", "email": "admin@example.org"}'
+
+#     echo ""
+
+#     echo -e "${GREEN}Pulsar Manager initial setup complete${NC}"
+#     echo -e "${YELLOW}Access the Pulsar Manager UI at http://$NODE_IP:$PULSAR_MANAGER_UI_PORT${NC}"
+#     echo -e "${YELLOW}Log in with:${NC}"
+#     echo -e "  Username: admin"
+#     echo -e "  Password: apachepulsar"
+#     echo -e "${YELLOW}After logging in, add a new environment with these settings:${NC}"
+#     echo -e "  Name: pulsar-local"
+#     echo -e "  Service URL: http://pulsar-broker:8080"
+#     echo -e "  Broker URL for WebSocket: ws://pulsar-broker:8080"
+# fi

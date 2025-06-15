@@ -1,78 +1,135 @@
 [
   {
-    "assignment_id": "550e8400-e29b-41d4-a716-446655440001",
-    "opportunity_id": "12345",
-    "task_id": "67890",
-    "satellite_name": "WorldView-3",
-    "assigned_by_agent_id": "agent_001",
-    "status": "pending_simulation",
-    "target_id": "98765",
-    "aimpoint_latitude": 40.7128,
-    "aimpoint_longitude": -74.0060,
-    "access_start_time_unix_ts": 1704067200.0,
-    "access_end_time_unix_ts": 1704070800.0,
-    "predicted_value_at_assignment": 0.85,
-    "predicted_cloud_cover_at_assignment": 0.15,
-    "mean_look_angle_at_assignment": 25.3
+    "message_type": "task_batch",
+    "payload": {
+      "agent_id": "test_agent_001",
+      "time_step_end_time": "2024-01-01T12:00:00+00:00",
+      "tasks": [
+        {
+          "task_id": "550e8400-e29b-41d4-a716-446655440001",
+          "opportunity_id": "12345",
+          "original_task_id": "67890",
+          "agent_id": "agent_001",
+          "satellite_id": "WorldView-3",
+          "target_id": "98765",
+          "start_time": "2024-01-01T00:00:00+00:00",
+          "duration": 1.0,
+          "priority": 1,
+          "time_step_window": "2024-01-01T12:00:00+00:00",
+          "task_type": "image_collect",
+          "parameters": {
+            "aimpoint_latitude": 40.7128,
+            "aimpoint_longitude": -74.006,
+            "assignment_id": "550e8400-e29b-41d4-a716-446655440001",
+            "status": "pending_simulation",
+            "access_start_time_unix_ts": 1704067200.0,
+            "access_end_time_unix_ts": 1704070800.0,
+            "predicted_value_at_assignment": 0.85,
+            "predicted_cloud_cover_at_assignment": 0.15,
+            "mean_look_angle_at_assignment": 25.3
+          }
+        },
+        {
+          "task_id": "550e8400-e29b-41d4-a716-446655440002",
+          "opportunity_id": "12346",
+          "original_task_id": "67891",
+          "agent_id": "agent_002",
+          "satellite_id": "GeoEye-1",
+          "target_id": "98766",
+          "start_time": "2024-01-01T02:00:00+00:00",
+          "duration": 1.0,
+          "priority": 2,
+          "time_step_window": "2024-01-01T12:00:00+00:00",
+          "task_type": "image_collect",
+          "parameters": {
+            "aimpoint_latitude": 51.5074,
+            "aimpoint_longitude": -0.1278,
+            "assignment_id": "550e8400-e29b-41d4-a716-446655440002",
+            "status": "pending_simulation",
+            "access_start_time_unix_ts": 1704074400.0,
+            "access_end_time_unix_ts": 1704078000.0,
+            "predicted_value_at_assignment": 0.92,
+            "predicted_cloud_cover_at_assignment": 0.05,
+            "mean_look_angle_at_assignment": 18.7
+          }
+        },
+        {
+          "task_id": "550e8400-e29b-41d4-a716-446655440003",
+          "opportunity_id": "12347",
+          "original_task_id": "67892",
+          "agent_id": "agent_003",
+          "satellite_id": "QuickBird",
+          "target_id": "98767",
+          "start_time": "2024-01-01T04:00:00+00:00",
+          "duration": 1.0,
+          "priority": 3,
+          "time_step_window": "2024-01-01T12:00:00+00:00",
+          "task_type": "image_collect",
+          "parameters": {
+            "aimpoint_latitude": 35.6762,
+            "aimpoint_longitude": 139.6503,
+            "assignment_id": "550e8400-e29b-41d4-a716-446655440003",
+            "status": "pending_simulation",
+            "access_start_time_unix_ts": 1704081600.0,
+            "access_end_time_unix_ts": 1704085200.0
+          }
+        },
+        {
+          "task_id": "550e8400-e29b-41d4-a716-446655440004",
+          "opportunity_id": "12348",
+          "original_task_id": "67893",
+          "agent_id": "agent_003",
+          "satellite_id": "IKONOS",
+          "target_id": "98768",
+          "start_time": "2024-01-01T06:00:00+00:00",
+          "duration": 1.0,
+          "priority": 4,
+          "time_step_window": "2024-01-01T12:00:00+00:00",
+          "task_type": "image_collect",
+          "parameters": {
+            "aimpoint_latitude": -33.8688,
+            "aimpoint_longitude": 151.2093,
+            "assignment_id": "550e8400-e29b-41d4-a716-446655440004",
+            "status": "pending_simulation",
+            "access_start_time_unix_ts": 1704088800.0,
+            "access_end_time_unix_ts": 1704092400.0,
+            "predicted_value_at_assignment": 0.78,
+            "predicted_cloud_cover_at_assignment": 0.35,
+            "mean_look_angle_at_assignment": 45.2
+          }
+        },
+        {
+          "task_id": "550e8400-e29b-41d4-a716-446655440005",
+          "opportunity_id": "12349",
+          "original_task_id": "67894",
+          "agent_id": "agent_001",
+          "satellite_id": "Pleiades-1A",
+          "target_id": "98769",
+          "start_time": "2024-01-01T08:00:00+00:00",
+          "duration": 1.0,
+          "priority": 5,
+          "time_step_window": "2024-01-01T12:00:00+00:00",
+          "task_type": "image_collect",
+          "parameters": {
+            "aimpoint_latitude": 48.8566,
+            "aimpoint_longitude": 2.3522,
+            "assignment_id": "550e8400-e29b-41d4-a716-446655440005",
+            "status": "pending_simulation",
+            "access_start_time_unix_ts": 1704096000.0,
+            "access_end_time_unix_ts": 1704099600.0,
+            "predicted_value_at_assignment": 0.95,
+            "predicted_cloud_cover_at_assignment": 0.02,
+            "mean_look_angle_at_assignment": 12.8
+          }
+        }
+      ]
+    }
   },
   {
-    "assignment_id": "550e8400-e29b-41d4-a716-446655440002",
-    "opportunity_id": "12346",
-    "task_id": "67891",
-    "satellite_name": "GeoEye-1",
-    "assigned_by_agent_id": "agent_002",
-    "status": "pending_simulation",
-    "target_id": "98766",
-    "aimpoint_latitude": 51.5074,
-    "aimpoint_longitude": -0.1278,
-    "access_start_time_unix_ts": 1704074400.0,
-    "access_end_time_unix_ts": 1704078000.0,
-    "predicted_value_at_assignment": 0.92,
-    "predicted_cloud_cover_at_assignment": 0.05,
-    "mean_look_angle_at_assignment": 18.7
-  },
-  {
-    "assignment_id": "550e8400-e29b-41d4-a716-446655440003",
-    "opportunity_id": "12347",
-    "task_id": "67892",
-    "satellite_name": "QuickBird",
-    "status": "pending_simulation",
-    "target_id": "98767",
-    "aimpoint_latitude": 35.6762,
-    "aimpoint_longitude": 139.6503,
-    "access_start_time_unix_ts": 1704081600.0,
-    "access_end_time_unix_ts": 1704085200.0
-  },
-  {
-    "assignment_id": "550e8400-e29b-41d4-a716-446655440004",
-    "opportunity_id": "12348",
-    "task_id": "67893",
-    "satellite_name": "IKONOS",
-    "assigned_by_agent_id": "agent_003",
-    "status": "pending_simulation",
-    "target_id": "98768",
-    "aimpoint_latitude": -33.8688,
-    "aimpoint_longitude": 151.2093,
-    "access_start_time_unix_ts": 1704088800.0,
-    "access_end_time_unix_ts": 1704092400.0,
-    "predicted_value_at_assignment": 0.78,
-    "predicted_cloud_cover_at_assignment": 0.35,
-    "mean_look_angle_at_assignment": 45.2
-  },
-  {
-    "assignment_id": "550e8400-e29b-41d4-a716-446655440005",
-    "opportunity_id": "12349",
-    "task_id": "67894",
-    "satellite_name": "Pleiades-1A",
-    "assigned_by_agent_id": "agent_001",
-    "status": "pending_simulation",
-    "target_id": "98769",
-    "aimpoint_latitude": 48.8566,
-    "aimpoint_longitude": 2.3522,
-    "access_start_time_unix_ts": 1704096000.0,
-    "access_end_time_unix_ts": 1704099600.0,
-    "predicted_value_at_assignment": 0.95,
-    "predicted_cloud_cover_at_assignment": 0.02,
-    "mean_look_angle_at_assignment": 12.8
+    "message_type": "time_advance",
+    "payload": {
+      "TimeStepStartTime": "2024-01-01T12:00:00+00:00",
+      "TimeStepEndTime": "2024-01-01T12:30:00+00:00"
+    }
   }
 ]

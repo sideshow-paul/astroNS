@@ -24,31 +24,34 @@ data:
     ParseTaskingMessage:
       type: ParseJsonMessage
       json_key: json_data
-      pydantic_types: [TaskAssignment, SimulatorControlMessage, CollectedTargetData]
+      pydantic_types: [WrappedInputMessage]
+      parsed_object_key: parsed_object
+      object_result_field: payload
       result_key: parsed_message
       error_key: parse_error
       successful_type_key: successful_type
-      write_out_field_list:
-        [
-          assignment_id,
-          satellite_name,
-          target_id,
-          aimpoint_latitude,
-          aimpoint_longitude,
-          advance_simulation_time_to_unix_ts,
-        ]
+      write_out_field_list: All
       preserve_json: false
       time_processing: 0.0
       time_delay: 0.1
-      AdvanceSimulationTime: successful_type == "SimulatorControlMessage"
-      UplinkTime: successful_type == "TaskAssignment"
+      UnwrapPayload: ~
+
+    UnwrapPayload:
+      type: UnwrapPayload
+      wrapped_message_key: successful_type
+      store_unwrapped_payload_key: unwrapped_payload
+      AdvanceSimulationTime: unwrapped_payload == SimTimeAdvanceCommandPayload
+      ProcessBatchPayload: unwrapped_payload == SimTaskBatchPayload
+
+    ProcessBatchPayload:
+      type: ProcessBatchPayload
+      payload_key: unwrapped_payload
+      UplinkTime: ~
 
     AdvanceSimulationTime:
-      type: KeyDelayTime
-      delay_key: advance_simulation_time_to_unix_ts
-      convert_unix_time: true
-      # Alternative ISO datetime configuration:
-      # convert_iso_datetime: true
+      type: ProcessSimTimeAdvanceCommandPayload
+      payload_key: unwrapped_payload
+      SendSimulationStepCompletePayload: ~
 
     UplinkTime:
       type: RandomDistrib
@@ -56,25 +59,36 @@ data:
       weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
       time_delay: 1
       result_key: uplinkTimeSecs
-      ConvertUplinkTimeToDateTime: ~
-
-    ConvertUplinkTimeToDateTime:
-      type: AddKeyValue
-      result_key: UplinkTime
-      time_delay: 1
-      def value_fn(sim_time,msg): "return sim_time  + msg['uplinkTimeSecs']"
       CalculatePosition: ~
+
+    # ConvertUplinkTimeToDateTime:
+    #   type: AddKeyValue
+    #   result_key: UplinkTime
+    #   time_delay: 1
+    #   def value_fn(sim_time,msg): "return sim_time  + msg['uplinkTimeSecs']"
+    #   ConvertAccessTimeToISO: ~
+
+    # ConvertAccessTimeToISO:
+    #   type: AddKeyValue
+    #   result_key: access_start_time_iso
+    #   time_delay: 0.1
+    #   def value_fn(sim_time,msg): "import datetime; return datetime.datetime.fromtimestamp(msg['access_start_time_unix_ts'], tz=datetime.timezone.utc).isoformat()"
+    #   CalculatePosition: ~
 
     CalculatePosition:
       type: CalculateGeometry
-      tle_line1: "1 25544U 98067A   25096.03700594  .00015269  00000+0  28194-3 0  9999"
-      tle_line2: "2 25544  51.6369 304.3678 0004922  13.5339 346.5781 15.49280872503978"
+      satellite_name_key: satellite_name
+      tle_file_path: ./data/satellites.json
+      target_lat_key: aimpoint_latitude
+      target_lon_key: aimpoint_longitude
+      target_alt_key: target_alt
+      start_time_key: access_start_time_iso
       target_lat: 0.0
       target_lon: 0.0
       target_alt: 0.0
-      duration_seconds: 3600.0
-      step_seconds: 60.0
-      single_time_point: false
+      duration_seconds: 1.0
+      step_seconds: 1.0
+      single_time_point: true
       storage_key: geometry_results
       time_processing: 0.0
       time_delay: 1.0
@@ -97,7 +111,7 @@ data:
       distance_km: 400.0
       time_processing: 0.0
       time_delay: 1.0
-      DownlinkTime: ~
+      GetSensorDataFromScenario: ~
 
     # Quality:
     #   type: RandomDistrib
@@ -106,6 +120,41 @@ data:
     #   time_delay: 1
     #   results_key: Quality
     #   DownlinkTime: ~
+
+    GetSensorDataFromScenario:
+      type: LLMScenario
+      # Message key configuration
+      geo_polygon_key: geo_polygon
+      gsd_key: gsd_m_per_px
+      response_key: llm_scenario_response
+      error_key: llm_scenario_error
+      interested_locations_key: interested_locations
+
+      # LLM server configuration
+      llm_server_url: http://localhost:8080/v1/chat/completions
+      llm_model: qwen3:4b
+      llm_api_key: ""
+      llm_timeout: 30.0
+      llm_max_tokens: 500
+      llm_temperature: 0.7
+
+      # Request configuration
+      include_coordinates: true
+      include_area_estimate: true
+      custom_prompt_suffix: ""
+      use_interested_locations: true
+      interested_locations:
+        - [40.7128, -74.0060] # New York City (WorldView-3)
+        - [51.5074, -0.1278] # London (GeoEye-1)
+        - [35.6762, 139.6503] # Tokyo (QuickBird)
+        - [-33.8688, 151.2093] # Sydney (IKONOS)
+        - [48.8566, 2.3522] # Paris (Pleiades-1A)
+
+      # Node timing configuration
+      time_processing: 0.0
+      time_delay: 1.0
+
+      DownlinkTime: ~
 
     DownlinkTime:
       type: RandomDistrib
@@ -128,22 +177,29 @@ data:
       weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
       time_delay: 1
       result_key: processingTimeSecs
-      ConvertProcessingTimeToDateTime: ~
-
-    ConvertProcessingTimeToDateTime:
-      type: AddKeyValue
-      result_key: ProcessingTime
-      time_delay: 1
-      def value_fn(sim_time,msg): "return msg['DownlinkTime'] + msg['processingTimeSecs']"
       ProductDelivery: ~
+
+    # ConvertProcessingTimeToDateTime:
+    #   type: AddKeyValue
+    #   result_key: ProcessingTime
+    #   time_delay: 1
+    #   def value_fn(sim_time,msg): "return msg['DownlinkTime'] + msg['processingTimeSecs']"
+    #   ProductDelivery: ~
 
     ProductDelivery:
       type: PulsarTopicSink
-      topic_name: sim_output
-      pulsar_server: pulsar://pulsar-broker.pulsar:6650
-      time_delay: 1
-      FinalNode: ~
+      topic_name: simulator_output_topic
+      pulsar_server:  pulsar://pulsar-broker.pulsar:6650
+      use_pydantic_validation: true
+      pydantic_class: CollectedTargetDataPayload
+      time_delay: 0.1
+      FromQueue: ~
 
-    FinalNode:
-      type: DelayTime
-      time_delay: 0
+    SendSimulationStepCompletePayload:
+      type: PulsarTopicSink
+      topic_name: simulator_output_topic
+      pulsar_server: pulsar://pulsar-broker.pulsar:6650
+      use_pydantic_validation: true
+      pydantic_class: SimulationStepCompletePayload
+      time_delay: 0.1
+      FromQueue: ~
