@@ -39,12 +39,18 @@ USER astrons
 ENV XDG_CACHE_HOME=/home/astrons/.cache
 RUN mkdir -p /home/astrons/.cache/astropy
 
+# Set default values
+ENV ASTRONS_EPOCH=2024-01-01T00:00:00.0z
+ENV ASTRONS_MODEL_FILE=source/models/Simple/SimpleSensorCollectionModel.yml
+ENV ASTRONS_END_TIME=86400
 # Default command to run the simulation
-CMD ["python", "source/astroNS/astroNS.py", \
-    "source/models/Simple/SimpleSensorCollectionModel.yml", \
-    "--end_simtime=86400", \
-    "--network_name", "simple_prototype", \
-    "--node_stats", \
-    "--node_stats_history", \
-    "--epoch=2024-01-01T00:00:00.0z", \
-    "-t"]
+CMD ["sh", "-c", "python source/astroNS/astroNS.py $ASTRONS_MODEL_FILE --end_simtime=86400 --network_name simple_prototype --node_stats --node_stats_history --epoch=$ASTRONS_EPOCH -t"]
+
+# CMD ["python", "source/astroNS/astroNS.py", \
+#     $ASTRONS_MODEL_FILE, \
+#     "--end_simtime=" + $ASTRONS_END_TIME, \
+#     "--network_name", "simple_prototype", \
+#     "--node_stats", \
+#     "--node_stats_history", \
+#     "--epoch=$ASTRONS_EPOCH", \
+#     "-t"]
