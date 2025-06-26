@@ -15,7 +15,7 @@ data:
       sub_name: my-sub
       simtime_field_name: simtime
       poll_frequency_secs: 11.0
-      timeout_secs: 5.0
+      timeout_secs: 600.0
       retry_on_connection_error: true
       max_retry_attempts: 3
       retry_delay_secs: 10.0
@@ -38,35 +38,43 @@ data:
 
     UnwrapPayload:
       type: UnwrapPayload
-      wrapped_message_key: successful_type
-      store_unwrapped_payload_key: unwrapped_payload
-      AdvanceSimulationTime: unwrapped_payload == SimTimeAdvanceCommandPayload
-      ProcessBatchPayload: unwrapped_payload == SimTaskBatchPayload
+      wrapped_message_key: parsed_message
+      store_unwrapped_payload_key: parsed_object
+      AdvanceSimulationTime: payload_type == SimTimeAdvanceCommandPayload
+      ProcessBatchPayload: payload_type == SimTaskBatchPayload
 
     ProcessBatchPayload:
       type: ProcessBatchPayload
-      payload_key: unwrapped_payload
+      payload_key: parsed_object
       UplinkTime: ~
 
     AdvanceSimulationTime:
       type: ProcessSimTimeAdvanceCommandPayload
-      payload_key: unwrapped_payload
+      payload_key: parsed_object
+      wrapped_output_key: wrapped_output_message
+      WrappedOutputMessageSimulationStepCompletePayload: ~
+
+    WrappedOutputMessageSimulationStepCompletePayload:
+      type: WrapPayload
+      wrapped_message_key: WrappedOutputMessage
+      time_delay: 1
+      wrap_payload_type: SimulationStepCompletePayload
       SendSimulationStepCompletePayload: ~
 
     UplinkTime:
       type: RandomDistrib
-      population: [10, 20, 30, 40, 50, 60, 80, 90]
+      population: [600, 1200, 1800, 2400, 3000, 3600, 4800, 5400, 6000]
       weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
       time_delay: 1
       result_key: uplinkTimeSecs
-      CalculatePosition: ~
+      ConvertUplinkTimeToDateTime: ~
 
-    # ConvertUplinkTimeToDateTime:
-    #   type: AddKeyValue
-    #   result_key: UplinkTime
-    #   time_delay: 1
-    #   def value_fn(sim_time,msg): "return sim_time  + msg['uplinkTimeSecs']"
-    #   ConvertAccessTimeToISO: ~
+    ConvertUplinkTimeToDateTime:
+      type: AddKeyValue
+      result_key: UplinkTime
+      time_delay: 1
+      def value_fn(sim_time,msg): "return sim_time  + msg['uplinkTimeSecs']"
+      CalculatePosition: ~
 
     # ConvertAccessTimeToISO:
     #   type: AddKeyValue
@@ -77,15 +85,13 @@ data:
 
     CalculatePosition:
       type: CalculateGeometry
-      satellite_name_key: satellite_name
-      tle_file_path: ./data/satellites.json
+      satellite_name_key: satellite_id
+      tle_file_path: ./source/data/satellites.json # /Users/paulgreene/Documents/Codebase/python/astroNS/source/data/satellites.json
+      parameters_key: parameters
       target_lat_key: aimpoint_latitude
       target_lon_key: aimpoint_longitude
       target_alt_key: target_alt
-      start_time_key: access_start_time_iso
-      target_lat: 0.0
-      target_lon: 0.0
-      target_alt: 0.0
+      start_time_key: start_time
       duration_seconds: 1.0
       step_seconds: 1.0
       single_time_point: true
@@ -158,7 +164,7 @@ data:
 
     DownlinkTime:
       type: RandomDistrib
-      population: [10, 20, 30, 40, 50, 60, 80, 90]
+      population: [600, 1200, 1800, 2400, 3000, 3600, 4800, 5400, 6000]
       weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
       time_delay: 1
       result_key: downlinkTimeSecs
@@ -177,7 +183,7 @@ data:
       weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
       time_delay: 1
       result_key: processingTimeSecs
-      ProductDelivery: ~
+      WrappedOutputMessageCollectedTargetDataPayload: ~
 
     # ConvertProcessingTimeToDateTime:
     #   type: AddKeyValue
@@ -185,21 +191,27 @@ data:
     #   time_delay: 1
     #   def value_fn(sim_time,msg): "return msg['DownlinkTime'] + msg['processingTimeSecs']"
     #   ProductDelivery: ~
+    #
+    WrappedOutputMessageCollectedTargetDataPayload:
+      type: WrapPayload
+      wrapped_message_key: WrappedOutputMessage
+      time_delay: 1
+      payload_type: CollectedTargetDataPayload
+      ProductDelivery: ~
 
     ProductDelivery:
       type: PulsarTopicSink
       topic_name: simulator_output_topic
       pulsar_server:  pulsar://pulsar-broker.pulsar:6650
       use_pydantic_validation: true
-      pydantic_class: CollectedTargetDataPayload
+      pydantic_class: WrappedOutputMessage
       time_delay: 0.1
-      FromQueue: ~
 
     SendSimulationStepCompletePayload:
       type: PulsarTopicSink
       topic_name: simulator_output_topic
       pulsar_server: pulsar://pulsar-broker.pulsar:6650
       use_pydantic_validation: true
-      pydantic_class: SimulationStepCompletePayload
+      pydantic_class: WrappedOutputMessage
+      payload_class: SimulationStepCompletePayload
       time_delay: 0.1
-      FromQueue: ~

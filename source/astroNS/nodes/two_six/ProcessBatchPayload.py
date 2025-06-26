@@ -15,7 +15,8 @@ import uuid
 from nodes.core.base import BaseNode
 from nodes.pydantic_models.two_six_messages import (
     SimTaskBatchPayload,
-    SimTaskRequestStructure
+    SimTaskRequestStructure,
+    CollectedTargetDataPayload
 )
 
 
@@ -157,17 +158,17 @@ class ProcessBatchPayload(BaseNode):
 
     def execute(self):
         """Simpy execution code"""
-        delay: float = 0.0
-        processing_time: float = delay
+        delay_till_get_next_msg: float = 0.0
+        time_to_send_data_out: float = 0.0
         data_out_list: List[Dict[str, Any]] = []
-
+        # delay_till_get_next_msg,time_to_send_data_out
         while True:
-            data_in = yield (delay, processing_time, data_out_list)
+            data_in = yield (delay_till_get_next_msg, time_to_send_data_out, data_out_list)
 
             if data_in:
                 msg = data_in.copy()
-                delay = self.time_delay
-
+                delay_till_get_next_msg = self.time_delay
+                #import pudb; pu.db
                 # Get configuration values from input or defaults
                 payload_key = msg.get('payload_key', self.payload_key)
                 error_key = msg.get('error_key', self.error_key)
@@ -198,7 +199,7 @@ class ProcessBatchPayload(BaseNode):
                     else:
                         # Processing successful - create individual task messages
                         data_out_list = []
-
+                        time_to_send_data_out = []
                         for i, task_message in enumerate(task_messages):
                             # Add original message context if preserving
                             if self.preserve_original_message:
@@ -206,11 +207,16 @@ class ProcessBatchPayload(BaseNode):
                                 for key, value in msg.items():
                                     if key != payload_key and key not in task_message:
                                         task_message[key] = value
-
+                            #import pudb; pu.db
+                            task = task_message['SimTaskRequest']
+                            task_collect_datetime = task.start_time
+                            task_simtime = self.env.now +(task_collect_datetime - self.env.now_datetime()).total_seconds()
                             # Clear any previous error
                             if error_key in task_message:
                                 del task_message[error_key]
 
+
+                            time_to_send_data_out.append(task_simtime)
                             data_out_list.append(task_message)
 
                         print(
@@ -223,9 +229,9 @@ class ProcessBatchPayload(BaseNode):
                             task = task_message[task_request_key]
                             print(
                                 self.log_prefix(task_message.get("ID", "unknown"))
-                                + f"Task {i+1}: {task.task_id} for satellite {task.satellite_id}, target {task.target_id}"
+                                + f"Task {i+1}: {task.task_id} for satellite {task.satellite_id}, target {task.target_id}, Simtime: {time_to_send_data_out[i]}"
                             )
 
-                processing_time = self._processing_delay()
+                #time_to_send_data_out = self._processing_delay()
             else:
                 data_out_list = []

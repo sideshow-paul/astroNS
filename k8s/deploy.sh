@@ -59,114 +59,114 @@ if ! docker images | grep -q "astrons" &> /dev/null; then
     fi
 fi
 
-# Check if Pulsar namespace exists
-if ! kubectl get namespace pulsar &> /dev/null; then
-    echo -e "${YELLOW}Creating Pulsar namespace...${NC}"
-    kubectl create namespace pulsar
-    if [ $? -ne 0 ]; then
-        echo -e "${RED}Failed to create Pulsar namespace. Please check your permissions.${NC}"
-        exit 1
-    fi
-fi
+# # Check if Pulsar namespace exists
+# if ! kubectl get namespace pulsar &> /dev/null; then
+#     echo -e "${YELLOW}Creating Pulsar namespace...${NC}"
+#     kubectl create namespace pulsar
+#     if [ $? -ne 0 ]; then
+#         echo -e "${RED}Failed to create Pulsar namespace. Please check your permissions.${NC}"
+#         exit 1
+#     fi
+# fi
 
-# Apply Pulsar configuration
-echo -e "${YELLOW}Applying Pulsar configuration...${NC}"
-kubectl apply -f k8s/pulsar-config.yaml -n pulsar
+# # Apply Pulsar configuration
+# echo -e "${YELLOW}Applying Pulsar configuration...${NC}"
+# kubectl apply -f k8s/pulsar-config.yaml -n pulsar
 
-# Deploy Pulsar
-echo -e "${YELLOW}Deploying Pulsar broker...${NC}"
-kubectl apply -f k8s/pulsar.yaml -n pulsar
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Failed to deploy Pulsar. Please check your YAML files and permissions.${NC}"
-    exit 1
-fi
+# # Deploy Pulsar
+# echo -e "${YELLOW}Deploying Pulsar broker...${NC}"
+# kubectl apply -f k8s/pulsar.yaml -n pulsar
+# if [ $? -ne 0 ]; then
+#     echo -e "${RED}Failed to deploy Pulsar. Please check your YAML files and permissions.${NC}"
+#     exit 1
+# fi
 
-# Wait for Pulsar to be ready
-echo -e "${YELLOW}Waiting for Pulsar to be ready (this may take a few minutes)...${NC}"
-kubectl wait --for=condition=ready pod -l app=pulsar,component=broker -n pulsar --timeout=600s
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Timed out waiting for Pulsar to be ready. Please check Pulsar pods:${NC}"
-    kubectl get pods -n pulsar
-    echo -e "${RED}Check logs with: kubectl logs -n pulsar -l app=pulsar,component=broker${NC}"
-    exit 1
-fi
+# # Wait for Pulsar to be ready
+# echo -e "${YELLOW}Waiting for Pulsar to be ready (this may take a few minutes)...${NC}"
+# kubectl wait --for=condition=ready pod -l app=pulsar,component=broker -n pulsar --timeout=600s
+# if [ $? -ne 0 ]; then
+#     echo -e "${RED}Timed out waiting for Pulsar to be ready. Please check Pulsar pods:${NC}"
+#     kubectl get pods -n pulsar
+#     echo -e "${RED}Check logs with: kubectl logs -n pulsar -l app=pulsar,component=broker${NC}"
+#     exit 1
+# fi
 
-# Deploy Pulsar Manager
-echo -e "${YELLOW}Deploying Pulsar Manager...${NC}"
-cat <<EOF | kubectl apply -f - -n pulsar
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: pulsar-manager
-  labels:
-    app: pulsar
-    component: manager
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: pulsar
-      component: manager
-  template:
-    metadata:
-      labels:
-        app: pulsar
-        component: manager
-    spec:
-      containers:
-      - name: pulsar-manager
-        image: apachepulsar/pulsar-manager:v0.4.0
-        ports:
-        - containerPort: 9527
-          name: frontend
-        - containerPort: 7750
-          name: backend
-        env:
-        - name: SPRING_CONFIGURATION_FILE
-          value: /pulsar-manager/pulsar-manager/application.properties
-        - name: REDIRECT_HOST
-          value: "0.0.0.0"
-        - name: REDIRECT_PORT
-          value: "9527"
+# # Deploy Pulsar Manager
+# echo -e "${YELLOW}Deploying Pulsar Manager...${NC}"
+# cat <<EOF | kubectl apply -f - -n pulsar
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: pulsar-manager
+#   labels:
+#     app: pulsar
+#     component: manager
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: pulsar
+#       component: manager
+#   template:
+#     metadata:
+#       labels:
+#         app: pulsar
+#         component: manager
+#     spec:
+#       containers:
+#       - name: pulsar-manager
+#         image: apachepulsar/pulsar-manager:v0.4.0
+#         ports:
+#         - containerPort: 9527
+#           name: frontend
+#         - containerPort: 7750
+#           name: backend
+#         env:
+#         - name: SPRING_CONFIGURATION_FILE
+#           value: /pulsar-manager/pulsar-manager/application.properties
+#         - name: REDIRECT_HOST
+#           value: "0.0.0.0"
+#         - name: REDIRECT_PORT
+#           value: "9527"
 
-EOF
+# EOF
 
-# Create Pulsar Manager service
-echo -e "${YELLOW}Creating Pulsar Manager service...${NC}"
-cat <<EOF | kubectl apply -f - -n pulsar
-apiVersion: v1
-kind: Service
-metadata:
-  name: pulsar-manager
-  labels:
-    app: pulsar
-    component: manager
-spec:
-  ports:
-  - port: 9527
-    name: frontend
-    targetPort: 9527
-    nodePort: 30527
-  - port: 7750
-    name: backend
-    targetPort: 7750
-  selector:
-    app: pulsar
-    component: manager
-  type: NodePort
-EOF
+# # Create Pulsar Manager service
+# echo -e "${YELLOW}Creating Pulsar Manager service...${NC}"
+# cat <<EOF | kubectl apply -f - -n pulsar
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: pulsar-manager
+#   labels:
+#     app: pulsar
+#     component: manager
+# spec:
+#   ports:
+#   - port: 9527
+#     name: frontend
+#     targetPort: 9527
+#     nodePort: 30527
+#   - port: 7750
+#     name: backend
+#     targetPort: 7750
+#   selector:
+#     app: pulsar
+#     component: manager
+#   type: NodePort
+# EOF
 
 
 
-# Wait for Pulsar Manager to be ready
-echo -e "${YELLOW}Waiting for Pulsar Manager to be ready...${NC}"
-kubectl wait --for=condition=ready pod -l app=pulsar,component=manager -n pulsar --timeout=300s
-if [ $? -ne 0 ]; then
-    echo -e "${RED}Timed out waiting for Pulsar Manager to be ready. Please check Pulsar Manager pods:${NC}"
-    kubectl get pods -n pulsar -l app=pulsar,component=manager
-    echo -e "${RED}Check logs with: kubectl logs -n pulsar -l app=pulsar,component=manager${NC}"
-    exit 1
-fi
+# # Wait for Pulsar Manager to be ready
+# echo -e "${YELLOW}Waiting for Pulsar Manager to be ready...${NC}"
+# kubectl wait --for=condition=ready pod -l app=pulsar,component=manager -n pulsar --timeout=300s
+# if [ $? -ne 0 ]; then
+#     echo -e "${RED}Timed out waiting for Pulsar Manager to be ready. Please check Pulsar Manager pods:${NC}"
+#     kubectl get pods -n pulsar -l app=pulsar,component=manager
+#     echo -e "${RED}Check logs with: kubectl logs -n pulsar -l app=pulsar,component=manager${NC}"
+#     exit 1
+# fi
 
 # Create Pulsar topics
 # echo -e "${YELLOW}Creating Pulsar topics...${NC}"

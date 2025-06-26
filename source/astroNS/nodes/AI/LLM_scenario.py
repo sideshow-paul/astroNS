@@ -352,6 +352,7 @@ class LLMScenario(BaseNode):
                 delay = self.time_delay
 
                 # Get configuration values from input or defaults
+                # import pudb;pu.db
                 geo_polygon_key = msg.get('geo_polygon_key', self.geo_polygon_key)
                 gsd_key = msg.get('gsd_key', self.gsd_key)
                 response_key = msg.get('response_key', self.response_key)

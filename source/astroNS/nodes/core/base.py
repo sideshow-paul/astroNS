@@ -507,43 +507,48 @@ class BaseNode:
                     # 2. The delay for the message to arrive at the next node
                     # 3. The actual data to be sent out
 
-                    # Ensure the delay is not negative
-                    if delay_till_get_next_msg < 0.0 or time_to_send_data_out < 0.0:
-                        print(
-                            self.log_prefix(),
-                            "ERROR: Node returned negative delay {} or processing time {}".format(
-                                delay_till_get_next_msg, time_to_send_data_out
-                            ),
+                    if type(time_to_send_data_out) is float:
+                        time_to_send_data_out = [time_to_send_data_out]
+
+                    for index, event_time in enumerate(time_to_send_data_out):
+
+                        # Ensure the delay is not negative
+                        if delay_till_get_next_msg < 0.0 or event_time < 0.0:
+                            print(
+                                self.log_prefix(),
+                                "ERROR: Node returned negative delay {} or processing time {}".format(
+                                    delay_till_get_next_msg, event_time
+                                ),
+                            )
+                            # hack for now until I figure out what is causing this
+                            delay_till_get_next_msg = max(delay_till_get_next_msg, 0.0)
+                            event_time = max(event_time, 0.0)
+
+                        # log the msg and node used histories
+                        self.perform_node_bookkeeping(
+                            data_in["time_sent"]
+                            if "time_sent" in data_in
+                            else time_arrived,  # time_sent,
+                            delay_till_get_next_msg,
+                            event_time,
+                            str(data_in["ID"]),  # UUID's don't serialize so save as string
+                            data_in[self.msg_size_key],
+                            data_out_list,
                         )
-                        # hack for now until I figure out what is causing this
-                        delay_till_get_next_msg = max(delay_till_get_next_msg, 0.0)
-                        time_to_send_data_out = max(time_to_send_data_out, 0.0)
 
-                    # log the msg and node used histories
-                    self.perform_node_bookkeeping(
-                        data_in["time_sent"]
-                        if "time_sent" in data_in
-                        else time_arrived,  # time_sent,
-                        delay_till_get_next_msg,
-                        time_to_send_data_out,
-                        str(data_in["ID"]),  # UUID's don't serialize so save as string
-                        data_in[self.msg_size_key],
-                        data_out_list,
-                    )
+                        # The message has been processed, record it to log
+                        self.record_msg(
+                            data_in,
+                            data_out_list,
+                            event_time,
+                            delay_till_get_next_msg,
+                        )
 
-                    # The message has been processed, record it to log
-                    self.record_msg(
-                        data_in,
-                        data_out_list,
-                        time_to_send_data_out,
-                        delay_till_get_next_msg,
-                    )
-
-                    # add the 'send data to our outpipe' event to the sim
-                    simpy.events.Process(
-                        self.env,
-                        self.send_data_to_output(data_out_list, time_to_send_data_out),
-                    )
+                        # add the 'send data to our outpipe' event to the sim
+                        simpy.events.Process(
+                            self.env,
+                            self.send_data_to_output([data_out_list[index] ], event_time),
+                        )
 
                     # wait until we are ready to process the next msg in our inbox
                     yield self.env.timeout(delay_till_get_next_msg)

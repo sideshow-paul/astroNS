@@ -137,7 +137,9 @@ class CalculateGeometry(BaseNode):
                 if os.path.exists(path):
                     with open(path, 'r') as f:
                         tle_data = json.load(f)
-                    self.logger.info(f"Loaded TLE data from: {path}")
+                    print(
+                        self.log_prefix() + f"Loaded TLE data from: {path}"
+                    )
                     break
             else:
                 # If no file found, create default TLE data
@@ -196,16 +198,21 @@ class CalculateGeometry(BaseNode):
                 msg = data_in.copy()
                 delay = self.time_delay
 
+                task = msg['SimTaskRequest']
+
                 # Get configuration values from input or defaults
-                satellite_name = msg.get(self._satellite_name_key(), self._satellite_name())
+                satellite_name = task.satellite_id #msg.get(self._satellite_name_key(), self._satellite_name())
                 tle_line1, tle_line2 = self._get_tle_for_satellite(satellite_name)
-                target_lat = msg.get(self._target_lat_key(), self._target_lat)
-                target_lon = msg.get(self._target_lon_key(), self._target_lon)
+                target_lat = task.parameters["aimpoint_latitude"]  #msg.get(self._target_lat_key(), self._target_lat)
+                target_lon = task.parameters["aimpoint_longitude"]  #msg.get(self._target_lon_key(), self._target_lon)
                 target_alt = msg.get(self._target_alt_key(), self._target_alt)
-                start_time_str = msg.get(self._start_time_key(), self._start_time_str())
-                duration_seconds = msg.get('duration_seconds', self._duration_seconds())
+                start_time = task.start_time #msg.get(self._start_time_key(), self._start_time())
+                start_time_str = start_time.strftime('%Y-%m-%dT%H:%M:%S.%f') #msg.get(self._start_time_key(), self._start_time_str())
+                duration_seconds = task.duration #msg.get('duration_seconds', self._duration_seconds())
                 step_seconds = msg.get('step_seconds', self._step_seconds())
                 single_time_point = msg.get('single_time_point', self._single_time_point())
+
+                #import pudb;pu.db
 
                 try:
                     # Create satellite state vector provider from TLE
@@ -250,6 +257,63 @@ class CalculateGeometry(BaseNode):
             else:
                 data_out_list = []
 
+    def calculate_az(self, observer_position: np.ndarray, target_position: np.ndarray) -> np.ndarray:
+                    """
+                    Calculate azimuth angles from observer to target positions.
+
+                    Args:
+                        observer_position: Observer positions in ECEF frame (Nx3 array)
+                        target_position: Target positions in ECEF frame (Nx3 array)
+
+                    Returns:
+                        Array of azimuth angles in radians
+                    """
+                    # Ensure we have 2D arrays
+                    if observer_position.ndim == 1:
+                        observer_position = observer_position.reshape(1, -1)
+                    if target_position.ndim == 1:
+                        target_position = target_position.reshape(1, -1)
+
+                    # Calculate vector from observer to target
+                    target_vector = target_position - observer_position
+
+                    # Convert observer position to geodetic coordinates for local frame
+                    # This is a simplified conversion - for more accuracy, use proper geodetic conversion
+                    observer_lat = np.arcsin(observer_position[:, 2] / np.linalg.norm(observer_position, axis=1))
+                    observer_lon = np.arctan2(observer_position[:, 1], observer_position[:, 0])
+
+                    # Convert target vector to local ENU (East-North-Up) frame
+                    cos_lat = np.cos(observer_lat)
+                    sin_lat = np.sin(observer_lat)
+                    cos_lon = np.cos(observer_lon)
+                    sin_lon = np.sin(observer_lon)
+
+                    # Transformation matrix from ECEF to ENU
+                    east = -sin_lon * target_vector[:, 0] + cos_lon * target_vector[:, 1]
+                    north = (-sin_lat * cos_lon * target_vector[:, 0] -
+                            sin_lat * sin_lon * target_vector[:, 1] +
+                            cos_lat * target_vector[:, 2])
+
+                    # Calculate azimuth (angle from North towards East)
+                    azimuth = np.arctan2(east, north)
+
+                    # Ensure azimuth is in range [0, 2π]
+                    azimuth = np.where(azimuth < 0, azimuth + 2 * np.pi, azimuth)
+
+                    return azimuth
+
+    def calculate_elevations(self, observer_position: np.ndarray, target_position: np.ndarray):
+        # Calculate elevation (angle above horizon)
+        observer_lat = np.arcsin(observer_position[:, 2] / np.linalg.norm(observer_position, axis=1))
+        target_lat = np.arcsin(target_position[:, 2] / np.linalg.norm(target_position, axis=1))
+        cos_elevation = np.dot(observer_position, target_position.T) / (np.linalg.norm(observer_position, axis=1) * np.linalg.norm(target_position, axis=1))
+        elevation = np.arccos(cos_elevation)
+
+        # Ensure elevation is in range [0, π]
+        elevation = np.where(elevation < 0, elevation + np.pi, elevation)
+
+        return elevation
+
     def process_geometry_data(self, geometry: ObserverTargetGeometry, times: List[datetime]) -> List[Dict[str, Any]]:
         """
         Process and extract useful data from the geometry object.
@@ -264,49 +328,54 @@ class CalculateGeometry(BaseNode):
         results = []
 
         # Extract key arrays from geometry
-        grazing_angles = np.degrees(geometry.grazing_angle)
-        distances = geometry.distance
-        azimuths = np.degrees(geometry.azimuth)
-        elevations = np.degrees(geometry.elevation)
-        sun_elevations = np.degrees(geometry.sun_elevation_angle)
+        grazing_angles = np.degrees(geometry.grazing_angle[0])
+        distances = geometry.range[0]
+
+        observer_position = geometry.observer_position
+        target_position = geometry.target_position
+
+
+        azimuths = np.degrees(self.calculate_az(observer_position, target_position))
+
+        elevations = np.degrees(self.calculate_elevations(observer_position, target_position))
+        sun_elevations = np.degrees(geometry.sun_elevation_angle[0])
 
         # Get observer and target positions
-        observer_positions_ecef = geometry.observer_positions_ecef
-        target_positions_ecef = geometry.target_positions_ecef
+        observer_positions_ecef = geometry.observer_position
+        target_positions_ecef = geometry.target_position
 
-        # Process each time point
-        for i in range(len(times)):
-            # Skip invalid data points (e.g., where sun elevation calculation failed)
-            if np.isnan(grazing_angles[i]) or np.isnan(sun_elevations[i]):
-                continue
 
-            # Create result for this time point
-            time_result = {
-                'time': times[i].isoformat(),
-                'grazing_angle_deg': float(grazing_angles[i]),
-                'distance_km': float(distances[i]),
-                'azimuth_deg': float(azimuths[i]),
-                'elevation_deg': float(elevations[i]),
-                'sun_elevation_deg': float(sun_elevations[i]),
-                'observer_position_ecef_km': observer_positions_ecef[i].tolist(),
-                'target_position_ecef_km': target_positions_ecef[i].tolist(),
-            }
+        # Skip invalid data points (e.g., where sun elevation calculation failed)
+        # if np.isnan(grazing_angles) or np.isnan(sun_elevations):
+        #     continue
 
-            # Add derived calculations
+        # Create result for this time point
+        time_result = {
+            'time': times[0].isoformat(),
+            'grazing_angle_deg': float(grazing_angles),
+            'distance_km': float(distances),
+            'azimuth_deg': float(azimuths[0]),
+            'elevation_deg': float(elevations[0][0]),
+            'sun_elevation_deg': float(sun_elevations),
+            'observer_position_ecef_km': observer_positions_ecef[0].tolist(),
+            'target_position_ecef_km': target_positions_ecef[0].tolist(),
+        }
 
-            # Visibility status (simple check - needs elevation above horizon)
-            time_result['is_visible'] = elevations[i] > 0
+        # Add derived calculations
 
-            # Day/night status at target (simple check based on sun elevation)
-            time_result['is_day'] = sun_elevations[i] > 0
+        # Visibility status (simple check - needs elevation above horizon)
+        time_result['is_visible'] = float(elevations[0][0]) > 0
 
-            # Check if in eclipse (simplified method)
-            time_result['is_in_eclipse'] = self.check_eclipse(
-                observer_positions_ecef[i],
-                sun_elevations[i]
-            )
+        # Day/night status at target (simple check based on sun elevation)
+        time_result['is_day'] = float(sun_elevations) > 0
 
-            results.append(time_result)
+        # Check if in eclipse (simplified method)
+        time_result['is_in_eclipse'] = self.check_eclipse(
+            observer_positions_ecef[0],
+            float(sun_elevations)
+        )
+
+        results.append(time_result)
 
         return results
 

@@ -92,19 +92,22 @@ class PulsarTopicSink(BaseNode):
         data_out_list: List[Dict[str, Any]] = []
 
         while True:
-            data_in = yield #(delay_till_get_next_msg, time_to_send_data_out, data_out_list)
+            data_in = yield (delay_till_get_next_msg, time_to_send_data_out, data_out_list)
 
             try:
                 # Process the incoming data
                 data_out_list = [data_in]
-
+                #import pudb; pu.db
                 # Prepare data for sending
                 data_in_copy: Dict[str, Any] = data_in.copy()
                 data_in_copy['ID'] = str(data_in['ID'])
                 data_in_copy['time'] = self.env.now_datetime().isoformat(timespec='microseconds')
+                #import pudb; pu.db
 
+                if 'WrappedOutputMessage' in data_in_copy:
+                    json_data_in = data_in_copy['WrappedOutputMessage'].model_dump_json()
                 # Create Pydantic object if configured
-                if self.use_pydantic_validation and self.pydantic_class_name:
+                elif self.use_pydantic_validation and self.pydantic_class_name:
                     try:
                         pydantic_obj = self._create_pydantic_object(data_in_copy)
                         if pydantic_obj:
@@ -117,7 +120,7 @@ class PulsarTopicSink(BaseNode):
                         print(self.log_prefix(data_in_copy.get("ID", "unknown")) + f"Pydantic validation failed: {str(e)}")
                         # Continue with original data if validation fails
 
-                json_data_in: str = json.dumps(data_in_copy)
+                    json_data_in: str = json.dumps(data_in_copy)
 
                 print(self.log_prefix(data_in_copy.get("ID", "unknown")) + f"Sending message to topic {self.topic_name}")
                 self.producer.send(json_data_in.encode('utf-8'))

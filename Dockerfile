@@ -29,11 +29,22 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy source code
 COPY . .
 
-# Create non-root user
-RUN groupadd -r astrons && useradd -r -g astrons astrons
+# Create non-root user with home directory
+RUN groupadd -r astrons && useradd -r -g astrons -d /home/astrons -m astrons
 RUN chown -R astrons:astrons /app
+RUN chown -R astrons:astrons /home/astrons
 USER astrons
 
+# Set up astropy cache directory
+ENV XDG_CACHE_HOME=/home/astrons/.cache
+RUN mkdir -p /home/astrons/.cache/astropy
+
 # Default command to run the simulation
-ENTRYPOINT ["python"]
-CMD ["source/astroNS/astroNS.py","source/models/Simple/SimpleSensorCollectionModel.yml", "--end_simtime", "200", "--network_name", "simple_prototype"]
+CMD ["python", "source/astroNS/astroNS.py", \
+    "source/models/Simple/SimpleSensorCollectionModel.yml", \
+    "--end_simtime=86400", \
+    "--network_name", "simple_prototype", \
+    "--node_stats", \
+    "--node_stats_history", \
+    "--epoch=2024-01-01T00:00:00.0z", \
+    "-t"]

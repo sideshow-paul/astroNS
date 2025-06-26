@@ -94,14 +94,18 @@ class ProcessSimTimeAdvanceCommandPayload(BaseNode):
         """
         try:
             # Get the TimeStepEndTime from the payload
+            import pudb;pu.db
             time_step_end_time = payload.TimeStepEndTime
+
+            #advance_time = datetime.fromisoformat(advance_time_str)
+            #check_topic_at_simtime  = (advance_time - self.env.now_datetime()).total_seconds()
 
             # Check if env has epoch attribute
             if not hasattr(self.env, 'epoch'):
                 return None, None, "Simulation environment does not have an epoch attribute"
 
             # Calculate the delta between TimeStepEndTime and simulation epoch
-            time_delta = time_step_end_time - self.env.epoch
+            time_delta = time_step_end_time - self.env.now_datetime()
 
             # Convert to seconds
             delay_seconds = time_delta.total_seconds()
@@ -173,7 +177,7 @@ class ProcessSimTimeAdvanceCommandPayload(BaseNode):
         data_out_list: List[Tuple] = []
 
         while True:
-            data_in = yield (delay, processing_time, data_out_list)
+            data_in = yield (processing_time, delay - 1, data_out_list)
 
             if data_in:
                 msg = data_in.copy()

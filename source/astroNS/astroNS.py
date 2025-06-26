@@ -1,4 +1,4 @@
-#! /usr/bin/env  python3
+#!/usr/bin/env python3
 """
 astroNS simulator
 """
@@ -347,6 +347,8 @@ def main(
 
             filename = args.model_file
             SimStop = args.end_simtime
+
+
 
             network_nodes, env = runSim(filename, SimStop, env)
 

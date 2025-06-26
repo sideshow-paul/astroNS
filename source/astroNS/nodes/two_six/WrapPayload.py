@@ -6,7 +6,7 @@ from message data and wraps it in a WrappedOutputMessage for output to external 
 """
 from simpy.core import Environment
 from typing import List, Dict, Tuple, Any, Optional, Callable
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import uuid
 
@@ -88,6 +88,7 @@ class WrapPayload(BaseNode):
             Tuple of (payload, error_message)
         """
         try:
+            #import pudb;pu.db
             # Extract required fields with fallbacks
             payload_data = {
                 'collected_target_data_id': msg.get('collected_target_data_id', str(uuid.uuid4())),
@@ -98,9 +99,9 @@ class WrapPayload(BaseNode):
                 'satellite_name': msg.get('satellite_name', msg.get('satellite_id', 'unknown')),
                 'agent_id': msg.get('agent_id', 'unknown'),
                 'actual_collection_start_time': self._get_datetime_field(msg, 'start_time', 'actual_collection_start_time'),
-                'actual_collection_end_time': self._get_datetime_field(msg, 'end_time', 'actual_collection_end_time'),
-                'aimpoint_latitude': float(msg.get('aimpoint_latitude', 0.0)),
-                'aimpoint_longitude': float(msg.get('aimpoint_longitude', 0.0)),
+                'actual_collection_end_time': self._get_datetime_field(msg, 'start_time', 'actual_collection_start_time') + timedelta(seconds=1.0),
+                'aimpoint_latitude': float(msg.get('parameters', {}).get('aimpoint_latitude', 0.0)),
+                'aimpoint_longitude': float(msg.get('parameters', {}).get('aimpoint_longitude', 0.0)),
                 'simulated_success_status': msg.get('simulated_success_status', True),
                 'failure_reason': msg.get('failure_reason'),
                 'simulated_quality_score': msg.get('simulated_quality_score'),
@@ -154,11 +155,11 @@ class WrapPayload(BaseNode):
             else:
                 status = SimulationStatus.COMPLETED
 
-            message_text = msg.get('Message', msg.get('message'))
+            message_text = msg.get('Message', msg.get('message', 'None'))
 
             # Apply any configured default values
             payload_data = {
-                'TimeStepEndTime': time_step_end_time,
+                'TimeStepEndTime': time_step_end_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
                 'Status': status,
                 'Message': message_text
             }
@@ -267,6 +268,8 @@ class WrapPayload(BaseNode):
                 msg = data_in.copy()
                 delay = self.time_delay
 
+
+
                 # Get configuration values from input or defaults
                 payload_type = msg.get('wrap_payload_type', self.wrap_payload_type)
                 wrapped_message_key = msg.get('wrapped_message_key', self.wrapped_message_key)
@@ -276,6 +279,7 @@ class WrapPayload(BaseNode):
                 if payload_type == "CollectedTargetDataPayload":
                     payload, payload_error = self.create_collected_target_data_payload(msg)
                 elif payload_type == "SimulationStepCompletePayload":
+                    #import pudb;pu.db
                     payload, payload_error = self.create_simulation_step_complete_payload(msg)
                 else:
                     payload = None

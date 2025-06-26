@@ -5,6 +5,7 @@ import pulsar
 import json
 import uuid
 import simpy
+from datetime import datetime
 
 from simpy.core import Environment
 from nodes.core.base import BaseNode
@@ -198,6 +199,7 @@ class PulsarTopicSource(BaseNode):
 
             try:
                 # Attempt to receive message with timeout
+                print(self.log_prefix() + f"Waiting to receive message with timeout {self.timeout_ms} ms")
                 msg = self.consumer.receive(timeout_millis=self.timeout_ms)
                 self.consumer.acknowledge(msg)
 
@@ -218,7 +220,14 @@ class PulsarTopicSource(BaseNode):
                     time_to_send_data_out = simtime_of_msg - self.env.now
                     # delay_till_get_next_msg,
                     # time_to_send_data_out,
-                    yield self.poll_frequency_secs, time_to_send_data_out, [new_message]
+                    # Hack for now
+                    if ('message_type' in new_message) and (new_message['message_type'] == 'time_advance'):
+                        advance_time_str = new_message['payload']['TimeStepEndTime']
+                        advance_time = datetime.fromisoformat(advance_time_str)
+                        check_topic_at_simtime  = (advance_time - self.env.now_datetime()).total_seconds()
+                        yield check_topic_at_simtime, time_to_send_data_out,[new_message]
+                    else:
+                        yield self.poll_frequency_secs, time_to_send_data_out, [new_message]
                 except json.JSONDecodeError as e:
                     print(self.log_prefix() + f"Error parsing JSON message: {e}")
                     print(self.log_prefix() + f"Raw message content: {message}")
@@ -228,6 +237,7 @@ class PulsarTopicSource(BaseNode):
                 # Handle timeout or other receive errors
                 if "timeout" in str(e).lower():
                     print(self.log_prefix() + f"No message received within {self.timeout_ms}ms timeout, polling again")
+
                 elif "connection" in str(e).lower() or "subscribe" in str(e).lower():
                     print(self.log_prefix() + f"Connection/subscription error: {e}")
                     # Reset consumer to trigger reconnection logic

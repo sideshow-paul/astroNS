@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: astrons
-          image: astrons:0.8
+          image: astrons:latest
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -37,6 +37,8 @@ spec:
               mountPath: /app/source/models/Simple
             - name: results-volume
               mountPath: /app/Results
+            - name: cache-volume
+              mountPath: /home/astrons/.cache
       volumes:
         - name: config-volume
           configMap:
@@ -47,6 +49,9 @@ spec:
         - name: results-volume
           persistentVolumeClaim:
             claimName: astrons-results-pvc
+        - name: cache-volume
+          persistentVolumeClaim:
+            claimName: astrons-cache-pvc
 ---
 # apiVersion: v1
 # kind: Service
@@ -71,4 +76,16 @@ spec:
   resources:
     requests:
       storage: 1Gi
+  storageClassName: local-path
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: astrons-cache-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 512Mi
   storageClassName: local-path
