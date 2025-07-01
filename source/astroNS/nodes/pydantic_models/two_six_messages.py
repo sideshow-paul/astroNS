@@ -37,8 +37,8 @@ class SimTimeAdvanceCommandPayload(BaseModel):
     Payload for advancing simulation time.
     Origin: Agent Coordinator - Go
     """
-    TimeStepStartTime: datetime = Field(..., description="ISO 8601 UTC timestamp")
-    TimeStepEndTime: datetime = Field(..., description="ISO 8601 UTC timestamp")
+    time_step_start_time: datetime = Field(..., description="ISO 8601 UTC timestamp")
+    time_step_end_time: datetime = Field(..., description="ISO 8601 UTC timestamp")
 
 
 class SimTaskRequestStructure(BaseModel):

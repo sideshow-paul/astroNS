@@ -4,8 +4,9 @@ DEFAULT:
 
 FromQueue:
   type: PulsarTopicSource
-  pulsar_server: pulsar://localhost:30000
-  topic_name: my-topic
+  #pulsar_server: pulsar://localhost:30000
+  pulsar_server: pulsar://10.101.0.183:6650
+  topic_name: twosix/sixgeo/simulator_input_topic
   sub_name: my-sub
   simtime_field_name: simtime
   poll_frequency_secs: 11.0
@@ -40,7 +41,11 @@ UnwrapPayload:
 ProcessBatchPayload:
   type: ProcessBatchPayload
   payload_key: parsed_object
-  UplinkTime: ~
+  UplinkTime: tasking != None
+  NoTasking: tasking == None
+
+NoTasking:
+  type: delaytime
 
 AdvanceSimulationTime:
   type: ProcessSimTimeAdvanceCommandPayload
@@ -195,16 +200,16 @@ WrappedOutputMessageCollectedTargetDataPayload:
 
 ProductDelivery:
   type: PulsarTopicSink
-  topic_name: simulator_output_topic
-  pulsar_server: pulsar://localhost:30000
+  topic_name: twosix/sixgeo/simulator_output_topic
+  pulsar_server: pulsar://10.101.0.183:6650
   use_pydantic_validation: true
   pydantic_class: WrappedOutputMessage
   time_delay: 0.1
 
 SendSimulationStepCompletePayload:
   type: PulsarTopicSink
-  topic_name: simulator_output_topic
-  pulsar_server: pulsar://localhost:30000
+  topic_name: twosix/sixgeo/simulator_output_topic
+  pulsar_server: pulsar://10.101.0.183:6650
   use_pydantic_validation: true
   pydantic_class: WrappedOutputMessage
   payload_class: SimulationStepCompletePayload

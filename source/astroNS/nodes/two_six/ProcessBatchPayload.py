@@ -195,6 +195,7 @@ class ProcessBatchPayload(BaseNode):
                             self.log_prefix(msg.get("ID", "unknown"))
                             + f"ERROR: {error_msg}"
                         )
+                        msg['tasking'] = 'None'
                         data_out_list = [msg]
                     else:
                         # Processing successful - create individual task messages
@@ -217,6 +218,7 @@ class ProcessBatchPayload(BaseNode):
 
 
                             time_to_send_data_out.append(task_simtime)
+                            task_message['tasking'] = task.task_id
                             data_out_list.append(task_message)
 
                         print(
