@@ -86,7 +86,7 @@ requests==2.32.3
 rpds-py==0.24.0
 scipy==1.15.3
 sgp4==2.24
-#simple-accgen @ file:///Users/paulgreene/Documents/Codebase/python/astroNS/simple_accgen
+# simple-accgen @ file:///Users/paulgreene/Documents/Codebase/python/simple-accgen
 simplekml==1.3.6
 simpy==4.1.1
 six==1.17.0

@@ -11,7 +11,7 @@ data:
     FromQueue:
       type: PulsarTopicSource
       pulsar_server: pulsar://pulsar-broker.pulsar:6650
-      topic_name: my-topic
+      topic_name: simulator_input_topic
       sub_name: my-sub
       simtime_field_name: simtime
       poll_frequency_secs: 11.0

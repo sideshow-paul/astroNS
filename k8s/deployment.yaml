@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: astrons
-          image: astrons:latest
+          image: astrons:1.0
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -44,7 +44,7 @@ spec:
             - name: results-volume
               mountPath: /app/Results
             - name: cache-volume
-              mountPath: /home/astrons/.astropy
+              mountPath: /home/astrons/.cache
       volumes:
         - name: config-volume
           configMap:

@@ -40,7 +40,8 @@ ENV XDG_CACHE_HOME=/home/astrons/.cache
 RUN mkdir -p /home/astrons/.cache/astropy
 
 # Set default values
-ENV ASTRONS_EPOCH=2024-01-01T00:00:00.0z
+#ENV ASTRONS_EPOCH=2024-01-01T00:00:00.0z
+ENV ASTRONS_EPOCH=2025-05-27T12:00:00.0z
 ENV ASTRONS_MODEL_FILE=source/models/Simple/SimpleSensorCollectionModel.yml
 ENV ASTRONS_END_TIME=86400
 # Default command to run the simulation

@@ -222,7 +222,7 @@ class PulsarTopicSource(BaseNode):
                     # time_to_send_data_out,
                     # Hack for now
                     if ('message_type' in new_message) and (new_message['message_type'] == 'time_advance'):
-                        advance_time_str = new_message['payload']['time_step_end_time']
+                        advance_time_str = new_message['payload']['TimeStepEndTime']
                         advance_time = datetime.fromisoformat(advance_time_str)
                         check_topic_at_simtime  = (advance_time - self.env.now_datetime()).total_seconds()
                         yield check_topic_at_simtime, time_to_send_data_out,[new_message]

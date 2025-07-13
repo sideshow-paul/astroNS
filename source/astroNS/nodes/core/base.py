@@ -510,8 +510,8 @@ class BaseNode:
                     if type(time_to_send_data_out) is float:
                         time_to_send_data_out = [time_to_send_data_out]
 
-                    for index, out_msg in enumerate(data_out_list):
-                        event_time = time_to_send_data_out[index]
+                    for index, event_time in enumerate(time_to_send_data_out):
+
                         # Ensure the delay is not negative
                         if delay_till_get_next_msg < 0.0 or event_time < 0.0:
                             print(
@@ -533,24 +533,22 @@ class BaseNode:
                             event_time,
                             str(data_in["ID"]),  # UUID's don't serialize so save as string
                             data_in[self.msg_size_key],
-                            [out_msg],
+                            data_out_list,
                         )
 
                         # The message has been processed, record it to log
                         self.record_msg(
                             data_in,
-                            [out_msg],
+                            data_out_list,
                             event_time,
                             delay_till_get_next_msg,
                         )
 
                         # add the 'send data to our outpipe' event to the sim
-                        # if there are any data to send out
-                        if data_out_list:
-                            simpy.events.Process(
-                                self.env,
-                                self.send_data_to_output([out_msg], event_time) ,
-                            )
+                        simpy.events.Process(
+                            self.env,
+                            self.send_data_to_output([data_out_list[index] ], event_time),
+                        )
 
                     # wait until we are ready to process the next msg in our inbox
                     yield self.env.timeout(delay_till_get_next_msg)

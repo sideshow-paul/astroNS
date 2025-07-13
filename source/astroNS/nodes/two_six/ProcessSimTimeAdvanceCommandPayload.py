@@ -44,8 +44,8 @@ class ProcessSimTimeAdvanceCommandPayload(BaseNode):
         self._delay_key = self.setStringFromConfig("delay_key", "delay_seconds")
         self._error_key = self.setStringFromConfig("error_key", "time_advance_error")
         self._sim_time_key = self.setStringFromConfig("sim_time_key", "sim_time_seconds")
-        self._time_step_start_key = self.setStringFromConfig("time_step_start_key", "time_step_start_time")
-        self._time_step_end_key = self.setStringFromConfig("time_step_end_key", "time_step_end_time")
+        self._time_step_start_key = self.setStringFromConfig("time_step_start_key", "TimeStepStartTime")
+        self._time_step_end_key = self.setStringFromConfig("time_step_end_key", "TimeStepEndTime")
         self._wrapped_output_key = self.setStringFromConfig("wrapped_output_key", "wrapped_output_message")
 
         self.env.process(self.run())
@@ -95,7 +95,7 @@ class ProcessSimTimeAdvanceCommandPayload(BaseNode):
         try:
             # Get the TimeStepEndTime from the payload
             # import pudb;pu.db
-            time_step_end_time = payload.time_step_end_time
+            time_step_end_time = payload.TimeStepEndTime
 
             #advance_time = datetime.fromisoformat(advance_time_str)
             #check_topic_at_simtime  = (advance_time - self.env.now_datetime()).total_seconds()
@@ -220,12 +220,12 @@ class ProcessSimTimeAdvanceCommandPayload(BaseNode):
 
                         # Also store the individual time fields for easy access
                         if isinstance(payload, SimTimeAdvanceCommandPayload):
-                            msg[time_step_start_key] = payload.time_step_start_time
-                            msg[time_step_end_key] = payload.time_step_end_time
+                            msg[time_step_start_key] = payload.TimeStepStartTime
+                            msg[time_step_end_key] = payload.TimeStepEndTime
 
                             # Create SimulationStepCompletePayload
                             sim_step_complete_payload = self.create_simulation_step_complete_payload(
-                                payload.time_step_end_time
+                                payload.TimeStepEndTime
                             )
 
                             # Create WrappedOutputMessage
@@ -240,7 +240,7 @@ class ProcessSimTimeAdvanceCommandPayload(BaseNode):
 
                         print(
                             self.log_prefix(msg.get("ID", "unknown"))
-                            + f"Successfully calculated time advance: {delay_seconds} seconds to reach {payload.time_step_end_time}"
+                            + f"Successfully calculated time advance: {delay_seconds} seconds to reach {payload.TimeStepEndTime}"
                         )
                         print(
                             self.log_prefix(msg.get("ID", "unknown"))
