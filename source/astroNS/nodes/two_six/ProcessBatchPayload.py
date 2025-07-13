@@ -185,7 +185,12 @@ class ProcessBatchPayload(BaseNode):
                 else:
                     # Process the batch payload
                     payload = msg[payload_key]
-                    task_messages, error_msg = self.process_batch_payload(payload)
+
+                    if payload.tasks:
+                        task_messages, error_msg = self.process_batch_payload(payload)
+                    else:
+                        task_messages = []
+                        error_msg = None
 
                     if error_msg:
                         # Processing failed, store error and pass through original message
@@ -195,6 +200,7 @@ class ProcessBatchPayload(BaseNode):
                             self.log_prefix(msg.get("ID", "unknown"))
                             + f"ERROR: {error_msg}"
                         )
+                        msg['tasking'] = 'None'
                         data_out_list = [msg]
                     else:
                         # Processing successful - create individual task messages
@@ -217,6 +223,7 @@ class ProcessBatchPayload(BaseNode):
 
 
                             time_to_send_data_out.append(task_simtime)
+                            task_message['tasking'] = task.task_id
                             data_out_list.append(task_message)
 
                         print(

@@ -16,6 +16,7 @@ from nodes.pydantic_models.two_six_messages import (
     WrappedOutputMessage,
     SimTimeAdvanceCommandPayload,
     SimTaskBatchPayload,
+    SimulationResetPayload,
     SimulationStepCompletePayload,
     CollectedTargetDataPayload,
     InputMessageType,
@@ -101,6 +102,8 @@ class UnwrapPayload(BaseNode):
                     payload_type = "SimTimeAdvanceCommandPayload"
                 elif message_type == InputMessageType.TASK_BATCH:
                     payload_type = "SimTaskBatchPayload"
+                elif message_type == InputMessageType.SIMULATION_RESET:
+                    payload_type = "SimulationResetPayload"
                 else:
                     return None, None, None, f"Unknown input message type: {message_type}"
 

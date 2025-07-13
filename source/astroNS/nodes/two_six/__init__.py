@@ -8,6 +8,7 @@ try:
     from .UnwrapPayload import UnwrapPayload
     from .ProcessBatchPayload import ProcessBatchPayload
     from .ProcessSimTimeAdvanceCommandPayload import ProcessSimTimeAdvanceCommandPayload
+    from .ProcessSimulationResetPayload import ProcessSimulationResetPayload
     from .WrapPayload import WrapPayload
 
     print(msg_prefix + "Loaded UnwrapPayload node.")
@@ -15,5 +16,6 @@ try:
 
     print(msg_prefix + "Loaded ProcessBatchPayload node.")
     print(msg_prefix + "Loaded ProcessSimTimeAdvanceCommandPayload node.")
+    print(msg_prefix + "Loaded ProcessSimulationResetPayload node.")
 except ModuleNotFoundError as e:
     raise e

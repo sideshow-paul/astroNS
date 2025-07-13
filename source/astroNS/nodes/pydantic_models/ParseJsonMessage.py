@@ -11,7 +11,7 @@ import logging
 
 from nodes.core.base import BaseNode
 from nodes.pydantic_models.simulator_interfaces import TaskAssignment, SimulatorControlMessage, CollectedTargetData
-from nodes.pydantic_models.two_six_messages import SimTimeAdvanceCommandPayload, SimTaskBatchPayload, SimTaskRequestStructure, WrappedInputMessage
+from nodes.pydantic_models.two_six_messages import SimTimeAdvanceCommandPayload, SimTaskBatchPayload, SimTaskRequestStructure, SimulationResetPayload,WrappedInputMessage
 
 class ParseJsonMessage(BaseNode):
     """ParseJsonMessage class"""
@@ -55,6 +55,7 @@ class ParseJsonMessage(BaseNode):
             "SimTaskBatchPayload": SimTaskBatchPayload,
             "SimTimeAdvanceCommandPayload": SimTimeAdvanceCommandPayload,
             "CollectedTargetData": CollectedTargetData,
+            "SimulationResetPayload": SimulationResetPayload,
             "WrappedInputMessage": WrappedInputMessage
         }
 
@@ -228,25 +229,3 @@ class ParseJsonMessage(BaseNode):
                 data_out_list = [msg]
             else:
                 data_out_list = []
-
-    # def run(self):
-    #     """
-    #     Run the node in the simulation environment.
-    #     """
-    #     while True:
-    #         # Wait for input data
-    #         data_in = yield self.env.in_queue.get()
-
-    #         # Get node execution details
-    #         delay, processing_time, data_out_list = self.send(data_in)
-
-    #         # Simulate processing time
-    #         yield self.env.timeout(processing_time)
-
-    #         # Handle delay
-    #         if delay > 0:
-    #             yield self.env.timeout(delay)
-
-    #         # Send output data
-    #         for data_out in data_out_list:
-    #             self.env.out_queue.put(data_out)

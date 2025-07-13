@@ -17,6 +17,7 @@ class InputMessageType(str, Enum):
     """Valid message types for input messages to the Simulator."""
     TIME_ADVANCE = "time_advance"
     TASK_BATCH = "task_batch"
+    SIMULATION_RESET = "SIMULATION_RESET"
 
 
 class OutputMessageType(str, Enum):
@@ -37,8 +38,8 @@ class SimTimeAdvanceCommandPayload(BaseModel):
     Payload for advancing simulation time.
     Origin: Agent Coordinator - Go
     """
-    TimeStepStartTime: datetime = Field(..., description="ISO 8601 UTC timestamp")
-    TimeStepEndTime: datetime = Field(..., description="ISO 8601 UTC timestamp")
+    time_step_start_time: datetime = Field(..., description="ISO 8601 UTC timestamp")
+    time_step_end_time: datetime = Field(..., description="ISO 8601 UTC timestamp")
 
 
 class SimTaskRequestStructure(BaseModel):
@@ -71,6 +72,16 @@ class SimTaskBatchPayload(BaseModel):
     agent_id: str = Field(..., description="ID of the agent submitting the batch")
     tasks: List[SimTaskRequestStructure] = Field(..., description="List of task requests")
     time_step_end_time: datetime = Field(..., description="The TimeStepEndTime this entire batch is associated with")
+
+
+class SimulationResetPayload(BaseModel):
+    """
+    Payload for resetting the simulation to a new scenario.
+    Origin: Agent Coordinator - Go
+    """
+    new_scenario_start_time: datetime = Field(..., description="ISO 8601 UTC timestamp for new scenario start")
+    reset_id: str = Field(..., description="Unique identifier for this reset operation")
+    hard_reset_database: bool = Field(..., description="Whether to perform a hard reset of the database")
 
 
 # Output Message Payloads (Produced by Simulator)
@@ -116,7 +127,7 @@ class CollectedTargetDataPayload(BaseModel):
 class WrappedInputMessage(BaseModel):
     """Wrapper for messages sent TO the Simulator."""
     message_type: InputMessageType = Field(..., description="Discriminator for the payload type")
-    payload: Union[SimTimeAdvanceCommandPayload, SimTaskBatchPayload] = Field(..., description="The actual message payload")
+    payload: Union[SimTimeAdvanceCommandPayload, SimTaskBatchPayload, SimulationResetPayload] = Field(..., description="The actual message payload")
 
     class Config:
         """Pydantic configuration."""
@@ -128,6 +139,8 @@ class WrappedInputMessage(BaseModel):
             return SimTimeAdvanceCommandPayload
         elif self.message_type == InputMessageType.TASK_BATCH:
             return SimTaskBatchPayload
+        elif self.message_type == InputMessageType.SIMULATION_RESET:
+            return SimulationResetPayload
         else:
             raise ValueError(f"Unknown message_type: {self.message_type}")
 

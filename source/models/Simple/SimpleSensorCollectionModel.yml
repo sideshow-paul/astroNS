@@ -5,7 +5,9 @@ DEFAULT:
 FromQueue:
   type: PulsarTopicSource
   pulsar_server: pulsar://localhost:30000
-  topic_name: my-topic
+  #pulsar_server: pulsar://10.101.0.183:6650
+  #topic_name: twosix/sixgeo/simulator_input_topic
+  topic_name: simulator_input_topic
   sub_name: my-sub
   simtime_field_name: simtime
   poll_frequency_secs: 11.0
@@ -36,11 +38,19 @@ UnwrapPayload:
   store_unwrapped_payload_key: parsed_object
   AdvanceSimulationTime: payload_type == SimTimeAdvanceCommandPayload
   ProcessBatchPayload: payload_type == SimTaskBatchPayload
+  ResetSimulation: payload_type == ProcessSimulationResetPayload
 
 ProcessBatchPayload:
   type: ProcessBatchPayload
   payload_key: parsed_object
-  UplinkTime: ~
+  UplinkTime: tasking != None
+  NoTasking: tasking == None
+
+NoTasking:
+  type: delaytime
+
+ResetSimulation:
+  type: ProcessSimulationResetPayload
 
 AdvanceSimulationTime:
   type: ProcessSimTimeAdvanceCommandPayload
@@ -57,7 +67,8 @@ WrappedOutputMessageSimulationStepCompletePayload:
 
 UplinkTime:
   type: RandomDistrib
-  population: [600, 1200, 1800, 2400, 3000, 3600, 4800, 5400, 6000]
+  population: [1, 1, 1, 1, 1, 1, 1, 1, 1]
+  #population: [600, 1200, 1800, 2400, 3000, 3600, 4800, 5400, 6000]
   weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
   time_delay: 1
   result_key: uplinkTimeSecs
@@ -158,7 +169,8 @@ GetSensorDataFromScenario:
 
 DownlinkTime:
   type: RandomDistrib
-  population: [600, 1200, 1800, 2400, 3000, 3600, 4800, 5400, 6000]
+  #population: [600, 1200, 1800, 2400, 3000, 3600, 4800, 5400, 6000]
+  population: [1, 1, 1, 1, 1, 1, 1, 1, 1]
   weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
   time_delay: 1
   result_key: downlinkTimeSecs
@@ -173,7 +185,8 @@ ConvertDownlinkTimeToDateTime:
 
 ProcessingTime:
   type: RandomDistrib
-  population: [10, 20, 30, 40, 50, 60, 80, 90]
+  #population: [10, 20, 30, 40, 50, 60, 80, 90]
+  population: [1, 1, 1, 1, 1, 1, 1, 1]
   weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
   time_delay: 1
   result_key: processingTimeSecs
@@ -195,16 +208,20 @@ WrappedOutputMessageCollectedTargetDataPayload:
 
 ProductDelivery:
   type: PulsarTopicSink
+  #topic_name: twosix/sixgeo/simulator_output_topic
   topic_name: simulator_output_topic
   pulsar_server: pulsar://localhost:30000
+  #pulsar_server: pulsar://10.101.0.183:6650
   use_pydantic_validation: true
   pydantic_class: WrappedOutputMessage
   time_delay: 0.1
 
 SendSimulationStepCompletePayload:
   type: PulsarTopicSink
+  #topic_name: twosix/sixgeo/simulator_output_topic
   topic_name: simulator_output_topic
   pulsar_server: pulsar://localhost:30000
+  #pulsar_server: pulsar://10.101.0.183:6650
   use_pydantic_validation: true
   pydantic_class: WrappedOutputMessage
   payload_class: SimulationStepCompletePayload
