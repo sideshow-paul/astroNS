@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: astrons
-          image: astrons:1.0
+          image: astrons:1.1
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -33,18 +33,18 @@ spec:
             - name: PULSAR_PORT
               value: "6650"
             - name: ASTRONS_EPOCH
-              value: "2024-01-01T00:00:00.0z"
+              value: "2025-05-27T12:00:00.0z"
             - name: ASTRONS_MODEL_FILE
               value: "source/models/Simple/SimpleSensorCollectionModel.yml"
             - name: ASTRONS_END_TIME
-              value: "86400"
+              value: "172800"
           volumeMounts:
             - name: config-volume
               mountPath: /app/source/models/Simple
             - name: results-volume
               mountPath: /app/Results
             - name: cache-volume
-              mountPath: /home/astrons/.cache
+              mountPath: /home/astrons/.astropy
       volumes:
         - name: config-volume
           configMap:
