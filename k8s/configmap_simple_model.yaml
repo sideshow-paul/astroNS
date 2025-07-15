@@ -1,0 +1,234 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: astrons-config
+data:
+  SimpleSensorCollectionModel.yml: |
+    DEFAULT:
+      msg_size_key: size_mbits
+      seed: 42
+
+    FromQueue:
+      type: PulsarTopicSource
+      pulsar_server: pulsar://localhost:30000
+      #pulsar_server: pulsar://10.101.0.183:6650
+      topic_name: twosix/sixgeo/simulator_input_topic
+      #topic_name: simulator_input_topic
+      sub_name: my-sub
+      simtime_field_name: simtime
+      poll_frequency_secs: 11.0
+      timeout_secs: 600.0
+      retry_on_connection_error: true
+      max_retry_attempts: 3
+      retry_delay_secs: 10.0
+      ParseTaskingMessage: ~
+
+    ParseTaskingMessage:
+      type: ParseJsonMessage
+      json_key: json_data
+      pydantic_types: [WrappedInputMessage]
+      parsed_object_key: parsed_object
+      object_result_field: payload
+      result_key: parsed_message
+      error_key: parse_error
+      successful_type_key: successful_type
+      write_out_field_list: All
+      preserve_json: false
+      time_processing: 0.0
+      time_delay: 0.1
+      UnwrapPayload: ~
+
+    UnwrapPayload:
+      type: UnwrapPayload
+      wrapped_message_key: parsed_message
+      store_unwrapped_payload_key: parsed_object
+      AdvanceSimulationTime: payload_type == SimTimeAdvanceCommandPayload
+      ProcessBatchPayload: payload_type == SimTaskBatchPayload
+      ResetSimulation: payload_type == ProcessSimulationResetPayload
+
+    ProcessBatchPayload:
+      type: ProcessBatchPayload
+      payload_key: parsed_object
+      UplinkTime: tasking != None
+      NoTasking: tasking == None
+
+    NoTasking:
+      type: delaytime
+
+    ResetSimulation:
+      type: ProcessSimulationResetPayload
+
+    AdvanceSimulationTime:
+      type: ProcessSimTimeAdvanceCommandPayload
+      payload_key: parsed_object
+      wrapped_output_key: wrapped_output_message
+      WrappedOutputMessageSimulationStepCompletePayload: ~
+
+    WrappedOutputMessageSimulationStepCompletePayload:
+      type: WrapPayload
+      wrapped_message_key: WrappedOutputMessage
+      time_delay: 1
+      wrap_payload_type: SimulationStepCompletePayload
+      SendSimulationStepCompletePayload: ~
+
+    UplinkTime:
+      type: RandomDistrib
+      population: [1, 1, 1, 1, 1, 1, 1, 1, 1]
+      #population: [600, 1200, 1800, 2400, 3000, 3600, 4800, 5400, 6000]
+      weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
+      time_delay: 1
+      result_key: uplinkTimeSecs
+      ConvertUplinkTimeToDateTime: ~
+
+    ConvertUplinkTimeToDateTime:
+      type: AddKeyValue
+      result_key: UplinkTime
+      time_delay: 1
+      def value_fn(sim_time,msg): "return sim_time  + msg['uplinkTimeSecs']"
+      CalculatePosition: ~
+
+    # ConvertAccessTimeToISO:
+    #   type: AddKeyValue
+    #   result_key: access_start_time_iso
+    #   time_delay: 0.1
+    #   def value_fn(sim_time,msg): "import datetime; return datetime.datetime.fromtimestamp(msg['access_start_time_unix_ts'], tz=datetime.timezone.utc).isoformat()"
+    #   CalculatePosition: ~
+
+    CalculatePosition:
+      type: CalculateGeometry
+      satellite_name_key: satellite_id
+      tle_file_path: ./source/data/satellites.json # /Users/paulgreene/Documents/Codebase/python/astroNS/source/data/satellites.json
+      parameters_key: parameters
+      target_lat_key: aimpoint_latitude
+      target_lon_key: aimpoint_longitude
+      target_alt_key: target_alt
+      start_time_key: start_time
+      duration_seconds: 1.0
+      step_seconds: 1.0
+      single_time_point: true
+      storage_key: geometry_results
+      time_processing: 0.0
+      time_delay: 1.0
+      CalculateGSD: ~
+
+    CalculateGSD:
+      type: CalculateGSD
+      distance_key: distance_km
+      source_pos_key: observer_position_ecef_km
+      target_pos_key: target_position_ecef_km
+      use_ecef_positions: true
+      geometry_results_key: geometry_results
+      sensor_height_mm: 36.0
+      sensor_width_mm: 24.0
+      focal_length_mm: 500.0
+      image_height_px: 6000.0
+      image_width_px: 4000.0
+      use_sensor_height: true
+      gsd_storage_key: gsd_m_per_px
+      distance_km: 400.0
+      time_processing: 0.0
+      time_delay: 1.0
+      GetSensorDataFromScenario: ~
+
+    # Quality:
+    #   type: RandomDistrib
+    #   population: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    #   weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
+    #   time_delay: 1
+    #   results_key: Quality
+    #   DownlinkTime: ~
+
+    GetSensorDataFromScenario:
+      type: LLMScenario
+      # Message key configuration
+      geo_polygon_key: geo_polygon
+      gsd_key: gsd_m_per_px
+      response_key: llm_scenario_response
+      error_key: llm_scenario_error
+      interested_locations_key: interested_locations
+
+      # LLM server configuration
+      llm_server_url: http://localhost:8080/v1/chat/completions
+      llm_model: qwen3:4b
+      llm_api_key: ""
+      llm_timeout: 30.0
+      llm_max_tokens: 500
+      llm_temperature: 0.7
+
+      # Request configuration
+      include_coordinates: true
+      include_area_estimate: true
+      custom_prompt_suffix: ""
+      use_interested_locations: true
+      interested_locations:
+        - [40.7128, -74.0060] # New York City (WorldView-3)
+        - [51.5074, -0.1278] # London (GeoEye-1)
+        - [35.6762, 139.6503] # Tokyo (QuickBird)
+        - [-33.8688, 151.2093] # Sydney (IKONOS)
+        - [48.8566, 2.3522] # Paris (Pleiades-1A)
+
+      # Node timing configuration
+      time_processing: 0.0
+      time_delay: 1.0
+
+      DownlinkTime: ~
+
+    DownlinkTime:
+      type: RandomDistrib
+      #population: [600, 1200, 1800, 2400, 3000, 3600, 4800, 5400, 6000]
+      population: [1, 1, 1, 1, 1, 1, 1, 1, 1]
+      weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
+      time_delay: 1
+      result_key: downlinkTimeSecs
+      ConvertDownlinkTimeToDateTime: ~
+
+    ConvertDownlinkTimeToDateTime:
+      type: AddKeyValue
+      result_key: DownlinkTime
+      time_delay: 1
+      def value_fn(sim_time,msg): "return msg['UplinkTime'] + msg['downlinkTimeSecs'] "
+      ProcessingTime: ~
+
+    ProcessingTime:
+      type: RandomDistrib
+      #population: [10, 20, 30, 40, 50, 60, 80, 90]
+      population: [1, 1, 1, 1, 1, 1, 1, 1]
+      weights: [1, 2, 4, 7, 8, 7, 4, 2, 1]
+      time_delay: 1
+      result_key: processingTimeSecs
+      WrappedOutputMessageCollectedTargetDataPayload: ~
+
+    # ConvertProcessingTimeToDateTime:
+    #   type: AddKeyValue
+    #   result_key: ProcessingTime
+    #   time_delay: 1
+    #   def value_fn(sim_time,msg): "return msg['DownlinkTime'] + msg['processingTimeSecs']"
+    #   ProductDelivery: ~
+
+    WrappedOutputMessageCollectedTargetDataPayload:
+      type: WrapPayload
+      wrapped_message_key: WrappedOutputMessage
+      time_delay: 1
+      payload_type: CollectedTargetDataPayload
+      ProductDelivery: ~
+
+    ProductDelivery:
+      type: PulsarTopicSink
+      topic_name: twosix/sixgeo/simulator_output_topic
+      #topic_name: simulator_output_topic
+      pulsar_server: pulsar://localhost:30000
+      #pulsar_server: pulsar://10.101.0.183:6650
+      use_pydantic_validation: true
+      pydantic_class: WrappedOutputMessage
+      time_delay: 0.1
+
+    SendSimulationStepCompletePayload:
+      type: PulsarTopicSink
+      topic_name: twosix/sixgeo/simulator_output_topic
+      #topic_name: simulator_output_topic
+      pulsar_server: pulsar://localhost:30000
+      #pulsar_server: pulsar://10.101.0.183:6650
+      use_pydantic_validation: true
+      pydantic_class: WrappedOutputMessage
+      payload_class: SimulationStepCompletePayload
+      time_delay: 0.1
