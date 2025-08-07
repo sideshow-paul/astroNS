@@ -7,16 +7,20 @@ data:
     DEFAULT:
       msg_size_key: size_mbits
       seed: 42
+      pulsar_server: pulsar://pulsar-broker.pulsar:6650
+      #pulsar_server: pulsar://localhost:30000
+      #pulsar_server: pulsar://10.101.0.183:6650
 
     FromQueue:
       type: PulsarTopicSource
-      pulsar_server: pulsar://pulsar-broker.pulsar:6650
+      #pulsar_server: pulsar://pulsar-broker.pulsar:6650
       topic_name: simulator_input_topic
       sub_name: my-sub
       simtime_field_name: simtime
       poll_frequency_secs: 11.0
       timeout_secs: 600.0
       retry_on_connection_error: true
+      skip_past_messages_at_startup: true
       max_retry_attempts: 3
       retry_delay_secs: 10.0
       ParseTaskingMessage: ~
@@ -42,11 +46,19 @@ data:
       store_unwrapped_payload_key: parsed_object
       AdvanceSimulationTime: payload_type == SimTimeAdvanceCommandPayload
       ProcessBatchPayload: payload_type == SimTaskBatchPayload
+      ResetSimulation: payload_type == ProcessSimulationResetPayload
 
     ProcessBatchPayload:
       type: ProcessBatchPayload
       payload_key: parsed_object
-      UplinkTime: ~
+      UplinkTime: tasking != None
+      NoTasking: tasking == None
+
+    NoTasking:
+      type: delaytime
+
+    ResetSimulation:
+      type: ProcessSimulationResetPayload
 
     AdvanceSimulationTime:
       type: ProcessSimTimeAdvanceCommandPayload
@@ -202,7 +214,7 @@ data:
     ProductDelivery:
       type: PulsarTopicSink
       topic_name: simulator_output_topic
-      pulsar_server:  pulsar://pulsar-broker.pulsar:6650
+      #pulsar_server:  pulsar://pulsar-broker.pulsar:6650
       use_pydantic_validation: true
       pydantic_class: WrappedOutputMessage
       time_delay: 0.1
@@ -210,7 +222,7 @@ data:
     SendSimulationStepCompletePayload:
       type: PulsarTopicSink
       topic_name: simulator_output_topic
-      pulsar_server: pulsar://pulsar-broker.pulsar:6650
+      #pulsar_server: pulsar://pulsar-broker.pulsar:6650
       use_pydantic_validation: true
       pydantic_class: WrappedOutputMessage
       payload_class: SimulationStepCompletePayload

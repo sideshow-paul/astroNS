@@ -124,6 +124,7 @@ class ProcessSimulationResetPayload(BaseNode):
             if hard_reset:
                 self.logger.info("Hard reset requested - additional cleanup may be needed")
 
+
             return True
 
         except Exception as e:
@@ -159,6 +160,8 @@ class ProcessSimulationResetPayload(BaseNode):
                         + f"Payload key '{payload_key}' not found in message, passing through unchanged"
                     )
                 else:
+                    # should cause the pod to restart
+                    import sys; sys.exit(1)
                     # Process the reset payload
                     payload = msg[payload_key]
                     reset_id, new_scenario_start_time, hard_reset_database, error_msg = self.process_reset_payload(payload)
@@ -190,6 +193,7 @@ class ProcessSimulationResetPayload(BaseNode):
                                 self.log_prefix(msg.get("ID", "unknown"))
                                 + f"Successfully processed simulation reset: {reset_id}, new start time: {new_scenario_start_time}, hard reset: {hard_reset_database}"
                             )
+                            exit()
                         else:
                             msg[error_key] = "Failed to execute simulation reset"
                             print(

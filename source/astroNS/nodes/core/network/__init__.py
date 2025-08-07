@@ -6,13 +6,13 @@ Network nodes perform many of the base functions for astroNS.
 try:
     from .network_throughput import calculate_throughput_mathis, estimate_transfer_time, format_time, throughput_to_human_readable
 
-    msg_prefix = "    %|     0.00|2020-10-22T20:58:17.862886+00:00|      astroNS     |[   Simulator   ]|00000000-0000-0000-000000000000|"
+    msg_prefix = "    %|     0.00|0000-00-00T00:00:00.000000+00:00|      astroNS     |[   Simulator   ]|00000000-0000-0000-000000000000|"
     print(msg_prefix + "Loaded network_throughput utilities.")
 except ModuleNotFoundError as e:
     pass
 
 # Import nodes
-msg_prefix = "    %|     0.00|2020-10-22T20:58:17.862886+00:00|      astroNS     |[   Simulator   ]|00000000-0000-0000-000000000000|"
+msg_prefix = "    %|     0.00|0000-00-00T00:00:00.000000+00:00|      astroNS     |[   Simulator   ]|00000000-0000-0000-000000000000|"
 try:
     from .delaytime import DelayTime
 

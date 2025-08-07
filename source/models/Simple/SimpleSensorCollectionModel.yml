@@ -1,17 +1,19 @@
 DEFAULT:
   msg_size_key: size_mbits
   seed: 42
+  pulsar_server: pulsar://localhost:30000
+  #pulsar_server: pulsar://10.101.0.183:6650
 
 FromQueue:
   type: PulsarTopicSource
-  pulsar_server: pulsar://localhost:30000
+  #pulsar_server: pulsar://localhost:30000
   #pulsar_server: pulsar://10.101.0.183:6650
   #topic_name: twosix/sixgeo/simulator_input_topic
   topic_name: simulator_input_topic
   sub_name: my-sub
   simtime_field_name: simtime
   poll_frequency_secs: 11.0
-  timeout_secs: 600.0
+  timeout_secs: 864000.0
   retry_on_connection_error: true
   max_retry_attempts: 3
   retry_delay_secs: 10.0
@@ -142,7 +144,7 @@ GetSensorDataFromScenario:
   interested_locations_key: interested_locations
 
   # LLM server configuration
-  llm_server_url: http://localhost:8080/v1/chat/completions
+  llm_server_url: http://localhost:8000/api/docs#
   llm_model: qwen3:4b
   llm_api_key: ""
   llm_timeout: 30.0
@@ -210,7 +212,7 @@ ProductDelivery:
   type: PulsarTopicSink
   #topic_name: twosix/sixgeo/simulator_output_topic
   topic_name: simulator_output_topic
-  pulsar_server: pulsar://localhost:30000
+  #pulsar_server: pulsar://localhost:30000
   #pulsar_server: pulsar://10.101.0.183:6650
   use_pydantic_validation: true
   pydantic_class: WrappedOutputMessage
@@ -220,7 +222,7 @@ SendSimulationStepCompletePayload:
   type: PulsarTopicSink
   #topic_name: twosix/sixgeo/simulator_output_topic
   topic_name: simulator_output_topic
-  pulsar_server: pulsar://localhost:30000
+  #pulsar_server: pulsar://localhost:30000
   #pulsar_server: pulsar://10.101.0.183:6650
   use_pydantic_validation: true
   pydantic_class: WrappedOutputMessage

@@ -1,4 +1,4 @@
-FROM python:3.13-slim
+FROM python:3.13.5-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -43,8 +43,8 @@ RUN mkdir -p /home/astrons/.cache/astropy
 #ENV ASTRONS_EPOCH=2024-01-01T00:00:00.0z
 ENV ASTRONS_EPOCH=2025-05-27T12:00:00.0z
 ENV ASTRONS_MODEL_FILE=source/models/Simple/SimpleSensorCollectionModel.yml
-ENV ASTRONS_END_TIME=172800
-ENV OPENBLAS_CORETYPE=ARMV8
+ENV ASTRONS_END_TIME=864000
+#ENV OPENBLAS_CORETYPE=ARMV8
 
 # Default command to run the simulation
 CMD ["sh", "-c", "python source/astroNS/astroNS.py $ASTRONS_MODEL_FILE --end_simtime=$ASTRONS_END_TIME --network_name simple_prototype --node_stats --node_stats_history --epoch=$ASTRONS_EPOCH -t"]

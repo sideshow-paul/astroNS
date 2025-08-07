@@ -3,7 +3,7 @@ Pydantic models and related nodes for astroNS.
 """
 
 # Import all pydantic models and nodes
-msg_prefix = "    %|     0.00|2020-10-22T20:58:17.862886+00:00|      astroNS     |[   Simulator   ]|00000000-0000-0000-000000000000|"
+msg_prefix = "    %|     0.00|0000-00-00T00:00:00.000000+00:00|      astroNS     |[   Simulator   ]|00000000-0000-0000-000000000000|"
 
 # try:
 #     from .simulator_interfaces import TaskAssignment, SimulatorControlMessage, CollectedTargetData

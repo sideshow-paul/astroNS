@@ -5,7 +5,9 @@ import pulsar
 import json
 import uuid
 import simpy
-from datetime import datetime
+from datetime import datetime, timezone
+import pytz
+
 
 from simpy.core import Environment
 from nodes.core.base import BaseNode
@@ -41,6 +43,8 @@ class PulsarTopicSource(BaseNode):
         self.retry_on_connection_error: bool = configuration.get("retry_on_connection_error", True)
         self.max_retry_attempts: int = configuration.get("max_retry_attempts", 3)
         self.retry_delay_secs: float = configuration.get("retry_delay_secs", 10.0)
+        self.skip_past_messages_at_startup: bool = configuration.get("skip_past_messages_at_startup", True)
+        self.startup_datetime = datetime.now(timezone.utc)
         self.generates_data_only: bool = True
 
         # Initialize retry tracking
@@ -207,6 +211,17 @@ class PulsarTopicSource(BaseNode):
 
                 try:
                     message_data = json.loads(message)
+
+                    # Check if we should skip past messages at startup
+                    if self.skip_past_messages_at_startup and 'timestamp' in message_data:
+                        message_timestamp = datetime.fromisoformat(message_data['timestamp'])
+                        message_time = message_timestamp.replace(tzinfo=pytz.UTC)
+                        if message_time < self.startup_datetime:
+                            print(self.log_prefix() + f"Skipping message with prestart timestamp: {message_timestamp} < {self.startup_datetime}")
+                            # make an noop message
+                            yield 0.0, 0.0, [ { "ID": str(uuid.uuid4()), self.msg_size_key: 0,"payload_type": "skipped_msg" }]
+                            continue
+
                     new_message = message_data
                     new_message['json_data'] = message_data
                     id: str = str(uuid.uuid4())

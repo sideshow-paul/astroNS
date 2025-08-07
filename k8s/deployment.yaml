@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: astrons
-          image: astrons:1.1
+          image: astrons:1.2
           imagePullPolicy: IfNotPresent
           resources:
             requests:
@@ -37,7 +37,7 @@ spec:
             - name: ASTRONS_MODEL_FILE
               value: "source/models/Simple/SimpleSensorCollectionModel.yml"
             - name: ASTRONS_END_TIME
-              value: "172800"
+              value: "864000"
           volumeMounts:
             - name: config-volume
               mountPath: /app/source/models/Simple

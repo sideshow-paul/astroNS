@@ -62,7 +62,7 @@ def runSim(
 
     #!TODO Convert to logger instead of print
     print(
-        "    %|     0.00|2020-10-22T20:58:17.862886+00:00|      astroNS     |[   Simulator   ]|00000000-0000-0000-000000000000|Loaded |{}| total nodes".format(
+        "    %|     0.00|0000-00-00T00:00:00.000000+00:00|      astroNS     |[   Simulator   ]|00000000-0000-0000-000000000000|Loaded |{}| total nodes".format(
             len(network_nodes)
         )
     )
