@@ -90,9 +90,9 @@ class SimulationStepCompletePayload(BaseModel):
     Signals the Simulator has completed processing up to a given time.
     Origin: Simulator - Go
     """
-    TimeStepEndTime: datetime
-    Status: SimulationStatus
-    Message: Optional[str] = Field(None, description="Optional message, e.g., in case of an error")
+    time_step_end_time: datetime
+    status: SimulationStatus
+    message: Optional[str] = Field(None, description="Optional message, e.g., in case of an error")
 
 
 class CollectedTargetDataPayload(BaseModel):

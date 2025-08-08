@@ -132,10 +132,10 @@ class PulsarListener:
 
         if wrapped_message.message_type == OutputMessageType.SIMULATION_STEP_COMPLETE:
             payload = wrapped_message.payload
-            print(f"TimeStepEndTime: {payload.TimeStepEndTime}")
-            print(f"Status: {payload.Status}")
-            if payload.Message:
-                print(f"Message: {payload.Message}")
+            print(f"time_step_end_time: {payload.time_step_end_time}")
+            print(f"status: {payload.status}")
+            if payload.message:
+                print(f"message: {payload.message}")
 
         elif wrapped_message.message_type == OutputMessageType.COLLECTED_TARGET_DATA:
             payload = wrapped_message.payload
@@ -183,6 +183,8 @@ class PulsarListener:
                     # Receive message with timeout
                     msg = self.consumer.receive(timeout_millis=1000)
                     message_count += 1
+
+                    #print(f"{msg.data()}")
 
                     # Decode the message
                     wrapped_message = self.decode_message(msg.data())

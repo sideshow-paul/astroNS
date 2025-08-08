@@ -1,0 +1,46 @@
+[
+  {
+    "timestamp": "2025-06-26T21:03:42.884825Z",
+    "message_type": "task_batch",
+    "payload": {
+      "agent_id": "agent_for_worldview_2",
+      "tasks": [],
+      "time_step_end_time": "2025-05-27T12:05:00.000Z"
+    }
+  },
+  {
+    "timestamp": "2025-06-26T21:03:42.885486Z",
+    "message_type": "task_batch",
+    "payload": {
+      "agent_id": "agent_for_worldview_3",
+      "tasks": [],
+      "time_step_end_time": "2025-05-27T12:05:00.000Z"
+    }
+  },
+  {
+    "timestamp": "2025-06-26T21:03:42.885564Z",
+    "message_type": "task_batch",
+    "payload": {
+      "agent_id": "agent_for_geoeye_1",
+      "tasks": [],
+      "time_step_end_time": "2025-05-27T12:05:00.000Z"
+    }
+  },
+  {
+    "timestamp": "2025-06-26T21:03:42.899075Z",
+    "message_type": "task_batch",
+    "payload": {
+      "agent_id": "agent_for_geoeye_1",
+      "tasks": [],
+      "time_step_end_time": "2025-05-27T12:05:00.000Z"
+    }
+  },
+  {
+    "timestamp": "2025-06-26T21:03:42.899138Z",
+    "message_type": "time_advance",
+    "payload": {
+      "time_step_start_time": "2025-05-27T12:00:00Z",
+      "time_step_end_time": "2025-05-27T12:05:00Z"
+    }
+  }
+]

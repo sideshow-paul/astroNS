@@ -144,6 +144,13 @@ class ProcessSimulationResetPayload(BaseNode):
                 msg = data_in.copy()
                 delay = self.time_delay
 
+                print(
+                    self.log_prefix(msg.get("ID", "unknown"))
+                    + "Processing Restart"
+                )
+                # should cause the pod to restart
+                import sys; sys.exit(1)
+
                 # Get configuration values from input or defaults
                 payload_key = msg.get('payload_key', self.payload_key)
                 error_key = msg.get('error_key', self.error_key)
@@ -160,6 +167,10 @@ class ProcessSimulationResetPayload(BaseNode):
                         + f"Payload key '{payload_key}' not found in message, passing through unchanged"
                     )
                 else:
+                    print(
+                        self.log_prefix(msg.get("ID", "unknown"))
+                        + "Processing Restart"
+                    )
                     # should cause the pod to restart
                     import sys; sys.exit(1)
                     # Process the reset payload

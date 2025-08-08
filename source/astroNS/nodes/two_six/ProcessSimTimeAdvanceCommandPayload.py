@@ -150,9 +150,9 @@ class ProcessSimTimeAdvanceCommandPayload(BaseNode):
             SimulationStepCompletePayload instance
         """
         return SimulationStepCompletePayload(
-            TimeStepEndTime=time_step_end_time,
-            Status=SimulationStatus.COMPLETED,
-            Message=f"Time advanced to {time_step_end_time.isoformat()}"
+            time_step_end_time=time_step_end_time,
+            status=SimulationStatus.COMPLETED,
+            message=f"Time advanced to {time_step_end_time.isoformat()}"
         )
 
     def create_wrapped_output_message(self, sim_step_complete_payload: SimulationStepCompletePayload) -> WrappedOutputMessage:

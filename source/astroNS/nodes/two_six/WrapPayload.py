@@ -159,9 +159,9 @@ class WrapPayload(BaseNode):
 
             # Apply any configured default values
             payload_data = {
-                'TimeStepEndTime': time_step_end_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
-                'Status': status,
-                'Message': message_text
+                'time_step_end_time': time_step_end_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
+                'status': status,
+                'message': message_text
             }
 
             # Apply field mappings from configuration

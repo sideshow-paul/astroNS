@@ -46,7 +46,7 @@ data:
       store_unwrapped_payload_key: parsed_object
       AdvanceSimulationTime: payload_type == SimTimeAdvanceCommandPayload
       ProcessBatchPayload: payload_type == SimTaskBatchPayload
-      ResetSimulation: payload_type == ProcessSimulationResetPayload
+      ResetSimulation: payload_type == SimulationResetPayload
 
     ProcessBatchPayload:
       type: ProcessBatchPayload
