@@ -1,0 +1,1 @@
+flow_start,flow_end,src_ip,src_port,dst_ip,dst_port,protocol,orig_bytes,resp_bytes,orig_pkts,resp_pkts,duration,subnet

@@ -1,0 +1,105 @@
+<svg width="2000" height="3000" xmlns="http://www.w3.org/2000/svg">
+<defs>
+    <!-- Arrow marker definition -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+    
+    <!-- Drop shadow filter -->
+    <filter id="dropshadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="2" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+<text x="1000.0" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#333">Network Flow Diagram</text>
+<path d="M 1000.0 220.0 Q 775.0 260.0 550.0 300.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<line x1="1000.0" y1="220.0" x2="1000.0" y2="300.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1020.0" y="260.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">Process2: condition == true</text>
+<path d="M 1000.0 220.0 Q 1225.0 260.0 1450.0 300.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1225.0" y="260.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">Process3: error_count &gt; 5</text>
+<path d="M 550.0 420.0 Q 662.5 460.0 775.0 500.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 550.0 420.0 Q 662.5 560.0 775.0 700.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 1000.0 420.0 Q 887.5 460.0 775.0 500.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="887.5" y="460.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">Process4: status == &quot;complete&quot;</text>
+<path d="M 1000.0 420.0 Q 1112.5 460.0 1225.0 500.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1112.5" y="460.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">Process5: status == &quot;pending&quot;</text>
+<path d="M 1450.0 420.0 Q 1112.5 560.0 775.0 700.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1112.5" y="560.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">ErrorHandler: retry_count &gt;= max_retries</text>
+<path d="M 1450.0 420.0 Q 1337.5 460.0 1225.0 500.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<path d="M 775.0 620.0 Q 1000.0 660.0 1225.0 700.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<line x1="1225.0" y1="620.0" x2="1225.0" y2="700.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1245.0" y="660.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">OutputNode: validation_passed == true</text>
+<path d="M 1225.0 620.0 Q 1000.0 660.0 775.0 700.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1000.0" y="660.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">ErrorHandler: validation_passed == false</text>
+<path d="M 775.0 840.0 Q 887.5 880.0 1000.0 920.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="887.5" y="872.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">AdminConsole:</text>
+<text x="887.5" y="888.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#888">alert_severity == &quot;critical&quot;</text>
+<path d="M 1225.0 840.0 Q 1112.5 990.0 1000.0 1140.0" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<line x1="1000.0" y1="1060.0" x2="1000.0" y2="1140.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<rect x="825.0" y="100.0" width="350" height="120" rx="10" fill="#f5f5f5" stroke="#666666" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="1000.0" y="130.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#666666">StartNode</text>
+<line x1="845.0" y1="140.0" x2="1155.0" y2="140.0" stroke="#ddd" stroke-width="1"/>
+<text x="840.0" y="160.0" font-family="Arial, sans-serif" font-size="12" fill="#555">input_file: /data/input.txt</text>
+<text x="840.0" y="180.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: Source</text>
+<rect x="375.0" y="300.0" width="350" height="120" rx="10" fill="#f5f5f5" stroke="#666666" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="550.0" y="330.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#666666">Process1</text>
+<line x1="395.0" y1="340.0" x2="705.0" y2="340.0" stroke="#ddd" stroke-width="1"/>
+<text x="390.0" y="360.0" font-family="Arial, sans-serif" font-size="12" fill="#555">algorithm: simple</text>
+<text x="390.0" y="380.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: BasicProcessor</text>
+<rect x="825.0" y="300.0" width="350" height="120" rx="10" fill="#f5f5f5" stroke="#666666" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="1000.0" y="330.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#666666">Process2</text>
+<line x1="845.0" y1="340.0" x2="1155.0" y2="340.0" stroke="#ddd" stroke-width="1"/>
+<text x="840.0" y="360.0" font-family="Arial, sans-serif" font-size="12" fill="#555">threshold: 0.8</text>
+<text x="840.0" y="380.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: ConditionalProcessor</text>
+<rect x="1275.0" y="300.0" width="350" height="120" rx="10" fill="#f5f5f5" stroke="#666666" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="1450.0" y="330.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#666666">Process3</text>
+<line x1="1295.0" y1="340.0" x2="1605.0" y2="340.0" stroke="#ddd" stroke-width="1"/>
+<text x="1290.0" y="360.0" font-family="Arial, sans-serif" font-size="12" fill="#555">max_retries: 3</text>
+<text x="1290.0" y="380.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: ErrorProcessor</text>
+<rect x="600.0" y="500.0" width="350" height="120" rx="10" fill="#f5f5f5" stroke="#666666" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="775.0" y="530.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#666666">Process4</text>
+<line x1="620.0" y1="540.0" x2="930.0" y2="540.0" stroke="#ddd" stroke-width="1"/>
+<text x="615.0" y="560.0" font-family="Arial, sans-serif" font-size="12" fill="#555">merge_strategy: concatenate</text>
+<text x="615.0" y="580.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: MergeProcessor</text>
+<rect x="1050.0" y="500.0" width="350" height="120" rx="10" fill="#f5f5f5" stroke="#666666" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="1225.0" y="530.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#666666">Process5</text>
+<line x1="1070.0" y1="540.0" x2="1380.0" y2="540.0" stroke="#ddd" stroke-width="1"/>
+<text x="1065.0" y="560.0" font-family="Arial, sans-serif" font-size="12" fill="#555">fallback_enabled: true</text>
+<text x="1065.0" y="580.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: AlternativeProcessor</text>
+<rect x="600.0" y="700.0" width="350" height="140" rx="10" fill="#f5f5f5" stroke="#666666" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="775.0" y="730.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#666666">ErrorHandler</text>
+<line x1="620.0" y1="740.0" x2="930.0" y2="740.0" stroke="#ddd" stroke-width="1"/>
+<text x="615.0" y="760.0" font-family="Arial, sans-serif" font-size="12" fill="#555">log_level: ERROR</text>
+<text x="615.0" y="780.0" font-family="Arial, sans-serif" font-size="12" fill="#555">send_alerts: true</text>
+<text x="615.0" y="800.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: ErrorLogger</text>
+<rect x="1050.0" y="700.0" width="350" height="140" rx="10" fill="#f5f5f5" stroke="#666666" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="1225.0" y="730.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#666666">OutputNode</text>
+<line x1="1070.0" y1="740.0" x2="1380.0" y2="740.0" stroke="#ddd" stroke-width="1"/>
+<text x="1065.0" y="760.0" font-family="Arial, sans-serif" font-size="12" fill="#555">compression: gzip</text>
+<text x="1065.0" y="780.0" font-family="Arial, sans-serif" font-size="12" fill="#555">output_path: /data/output.json</text>
+<text x="1065.0" y="800.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: DataWriter</text>
+<rect x="825.0" y="920.0" width="350" height="140" rx="10" fill="#f5f5f5" stroke="#666666" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="1000.0" y="950.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#666666">AdminConsole</text>
+<line x1="845.0" y1="960.0" x2="1155.0" y2="960.0" stroke="#ddd" stroke-width="1"/>
+<text x="840.0" y="980.0" font-family="Arial, sans-serif" font-size="12" fill="#555">port: 8080</text>
+<text x="840.0" y="1000.0" font-family="Arial, sans-serif" font-size="12" fill="#555">refresh_rate: 60</text>
+<text x="840.0" y="1020.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: MonitoringDashboard</text>
+<rect x="825.0" y="1140.0" width="350" height="120" rx="10" fill="#f5f5f5" stroke="#666666" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="1000.0" y="1170.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#666666">FinalNode</text>
+<line x1="845.0" y1="1180.0" x2="1155.0" y2="1180.0" stroke="#ddd" stroke-width="1"/>
+<text x="840.0" y="1200.0" font-family="Arial, sans-serif" font-size="12" fill="#555">cleanup: true</text>
+<text x="840.0" y="1220.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: Terminator</text>
+<rect x="50" y="2850" width="250" height="120" rx="5" fill="#f5f5f5" stroke="#999" stroke-width="1"/>
+  <text x="175" y="2875" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333">Legend</text>
+  <text x="60" y="2895" font-family="Arial, sans-serif" font-size="12" fill="#555">Node box = YAML section</text>
+  <text x="60" y="2915" font-family="Arial, sans-serif" font-size="12" fill="#555">Properties = key: value pairs</text>
+  <text x="60" y="2935" font-family="Arial, sans-serif" font-size="12" fill="#555">Arrow = sub-key reference</text>
+  <text x="60" y="2955" font-family="Arial, sans-serif" font-size="12" fill="#555">~ = Empty/null value</text>
+</svg>

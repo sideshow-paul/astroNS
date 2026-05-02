@@ -1,0 +1,44 @@
+digraph NetworkFlow {
+    // Graph settings
+    rankdir=TB;
+    node [shape=record, style=filled, fontname="Arial"];
+    edge [fontname="Arial", fontsize=12];
+    bgcolor="white";
+
+    // Nodes
+    "AdvanceSimulationTime" [label="AdvanceSimulationTime\\n━━━━━━━━━━━━━━━━\\npayload_key: unwrapped_payload\\ntype: ProcessSimTimeAdvanceCommandPayload", fillcolor="#f5f5f5"];
+    "CalculateGSD" [label="CalculateGSD\\n━━━━━━━━━━━━━━━━\\ndistance_key: distance_km\\ndistance_km: 400.0\\nfocal_length_mm: 500.0\\ngeometry_results_key: geometry_results\\ngsd_storage_key: gsd_m_per_px\\nimage_height_px: 6000.0\\nimage_width_px: 4000.0\\nsensor_height_mm: 36.0\\nsensor_width_mm: 24.0\\nsource_pos_key: observer_position_ecef_km\\ntarget_pos_key: target_position_ecef_km\\ntime_delay: 1.0\\ntime_processing: 0.0\\ntype: CalculateGSD\\nuse_ecef_positions: true\\nuse_sensor_height: true", fillcolor="#fff8e1"];
+    "CalculatePosition" [label="CalculatePosition\\n━━━━━━━━━━━━━━━━\\nduration_seconds: 1.0\\nsatellite_name_key: satellite_name\\nsingle_time_point: true\\nstart_time_key: access_start_time_iso\\nstep_seconds: 1.0\\nstorage_key: geometry_results\\ntarget_alt: 0.0\\ntarget_alt_key: target_alt\\ntarget_lat: 0.0\\ntarget_lat_key: aimpoint_latitude\\ntarget_lon: 0.0\\ntarget_lon_key: aimpoint_longitude\\ntime_delay: 1.0\\ntime_processing: 0.0\\ntle_file_path: ./data/satellites.json\\ntype: CalculateGeometry", fillcolor="#f1f8e9"];
+    "ConvertAccessTimeToISO" [label="ConvertAccessTimeToISO\\n━━━━━━━━━━━━━━━━\\ndef value_fn(sim_time,msg): import datetime; return datetime.date...\\nresult_key: access_start_time_iso\\ntime_delay: 0.1\\ntype: AddKeyValue", fillcolor="#fce4ec"];
+    "ConvertDownlinkTimeToDateTime" [label="ConvertDownlinkTimeToDateTime\\n━━━━━━━━━━━━━━━━\\ndef value_fn(sim_time,msg): return msg['UplinkTime'] + msg['downl...\\nresult_key: DownlinkTime\\ntime_delay: 1\\ntype: AddKeyValue", fillcolor="#fce4ec"];
+    "ConvertProcessingTimeToDateTime" [label="ConvertProcessingTimeToDateTime\\n━━━━━━━━━━━━━━━━\\ndef value_fn(sim_time,msg): return msg['DownlinkTime'] + msg['pro...\\nresult_key: ProcessingTime\\ntime_delay: 1\\ntype: AddKeyValue", fillcolor="#fce4ec"];
+    "ConvertUplinkTimeToDateTime" [label="ConvertUplinkTimeToDateTime\\n━━━━━━━━━━━━━━━━\\ndef value_fn(sim_time,msg): return sim_time  + msg['uplinkTimeSecs']\\nresult_key: UplinkTime\\ntime_delay: 1\\ntype: AddKeyValue", fillcolor="#fce4ec"];
+    "DownlinkTime" [label="DownlinkTime\\n━━━━━━━━━━━━━━━━\\npopulation: [8 items]\\nresult_key: downlinkTimeSecs\\ntime_delay: 1\\ntype: RandomDistrib\\nweights: [9 items]", fillcolor="#e8f5e9"];
+    "FromQueue" [label="FromQueue\\n━━━━━━━━━━━━━━━━\\nmax_retry_attempts: 3\\npoll_frequency_secs: 11.0\\npulsar_server: pulsar://localhost:30000\\nretry_delay_secs: 10.0\\nretry_on_connection_error: true\\nsimtime_field_name: simtime\\nsub_name: my-sub\\ntimeout_secs: 50.0\\ntopic_name: my-topic\\ntype: PulsarTopicSource", fillcolor="#e3f2fd"];
+    "ParseTaskingMessage" [label="ParseTaskingMessage\\n━━━━━━━━━━━━━━━━\\nerror_key: parse_error\\njson_key: json_data\\nobject_result_field: payload\\nparsed_object_key: parsed_object\\npreserve_json: false\\npydantic_types: ['WrappedInputMessage']\\nresult_key: parsed_message\\nsuccessful_type_key: successful_type\\ntime_delay: 0.1\\ntime_processing: 0.0\\ntype: ParseJsonMessage\\nwrite_out_field_list: All", fillcolor="#f3e5f5"];
+    "ProcessBatchPayload" [label="ProcessBatchPayload\\n━━━━━━━━━━━━━━━━\\npayload_key: unwrapped_payload\\ntype: ProcessBatchPayload", fillcolor="#f5f5f5"];
+    "ProcessingTime" [label="ProcessingTime\\n━━━━━━━━━━━━━━━━\\npopulation: [8 items]\\nresult_key: processingTimeSecs\\ntime_delay: 1\\ntype: RandomDistrib\\nweights: [9 items]", fillcolor="#e8f5e9"];
+    "ProductDelivery" [label="ProductDelivery\\n━━━━━━━━━━━━━━━━\\npulsar_server: pulsar://localhost:30000\\npydantic_class: CollectedTargetDataPayload\\ntime_delay: 0.1\\ntopic_name: simulator_output_topic\\ntype: PulsarTopicSink\\nuse_pydantic_validation: true", fillcolor="#ffebee"];
+    "SendSimulationStepCompletePayload" [label="SendSimulationStepCompletePayload\\n━━━━━━━━━━━━━━━━\\npulsar_server: pulsar://localhost:30000\\npydantic_class: SimulationStepCompletePayload\\ntime_delay: 0.1\\ntopic_name: simulator_output_topic\\ntype: PulsarTopicSink\\nuse_pydantic_validation: true", fillcolor="#ffebee"];
+    "UnwrapPayload" [label="UnwrapPayload\\n━━━━━━━━━━━━━━━━\\nstore_unwrapped_payload_key: unwrapped_payload\\ntype: UnwrapPayload\\nwrapped_message_key: successful_type", fillcolor="#f5f5f5"];
+    "UplinkTime" [label="UplinkTime\\n━━━━━━━━━━━━━━━━\\npopulation: [8 items]\\nresult_key: uplinkTimeSecs\\ntime_delay: 1\\ntype: RandomDistrib\\nweights: [9 items]", fillcolor="#e8f5e9"];
+
+    // Connections
+    "FromQueue" -> "ParseTaskingMessage";
+    "ParseTaskingMessage" -> "UnwrapPayload";
+    "UnwrapPayload" -> "AdvanceSimulationTime" [label="AdvanceSimulationTime: unwrapped_payload == SimTimeAdvanceCommandPayload"];
+    "UnwrapPayload" -> "ProcessBatchPayload" [label="ProcessBatchPayload: unwrapped_payload == SimTaskBatchPayload"];
+    "ProcessBatchPayload" -> "UplinkTime";
+    "AdvanceSimulationTime" -> "SendSimulationStepCompletePayload";
+    "UplinkTime" -> "ConvertUplinkTimeToDateTime";
+    "ConvertUplinkTimeToDateTime" -> "ConvertAccessTimeToISO";
+    "ConvertAccessTimeToISO" -> "CalculatePosition";
+    "CalculatePosition" -> "CalculateGSD";
+    "CalculateGSD" -> "DownlinkTime";
+    "DownlinkTime" -> "ConvertDownlinkTimeToDateTime";
+    "ConvertDownlinkTimeToDateTime" -> "ProcessingTime";
+    "ProcessingTime" -> "ConvertProcessingTimeToDateTime";
+    "ConvertProcessingTimeToDateTime" -> "ProductDelivery";
+    "ProductDelivery" -> "FromQueue";
+    "SendSimulationStepCompletePayload" -> "FromQueue";
+}

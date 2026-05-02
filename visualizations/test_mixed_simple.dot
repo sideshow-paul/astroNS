@@ -1,0 +1,36 @@
+digraph NetworkFlow {
+    // Graph settings
+    rankdir=TB;
+    node [shape=record, style=filled, fontname="Arial"];
+    edge [fontname="Arial", fontsize=12];
+    bgcolor="white";
+
+    // Nodes
+    "AdminConsole" [label="AdminConsole\\n━━━━━━━━━━━━━━━━\\nport: 8080\\nrefresh_rate: 60\\ntype: MonitoringDashboard", fillcolor="#f5f5f5"];
+    "ErrorHandler" [label="ErrorHandler\\n━━━━━━━━━━━━━━━━\\nlog_level: ERROR\\nsend_alerts: true\\ntype: ErrorLogger", fillcolor="#f5f5f5"];
+    "FinalNode" [label="FinalNode\\n━━━━━━━━━━━━━━━━\\ncleanup: true\\ntype: Terminator", fillcolor="#f5f5f5"];
+    "OutputNode" [label="OutputNode\\n━━━━━━━━━━━━━━━━\\ncompression: gzip\\noutput_path: /data/output.json\\ntype: DataWriter", fillcolor="#f5f5f5"];
+    "Process1" [label="Process1\\n━━━━━━━━━━━━━━━━\\nalgorithm: simple\\ntype: BasicProcessor", fillcolor="#f5f5f5"];
+    "Process2" [label="Process2\\n━━━━━━━━━━━━━━━━\\nthreshold: 0.8\\ntype: ConditionalProcessor", fillcolor="#f5f5f5"];
+    "Process3" [label="Process3\\n━━━━━━━━━━━━━━━━\\nmax_retries: 3\\ntype: ErrorProcessor", fillcolor="#f5f5f5"];
+    "Process4" [label="Process4\\n━━━━━━━━━━━━━━━━\\nmerge_strategy: concatenate\\ntype: MergeProcessor", fillcolor="#f5f5f5"];
+    "Process5" [label="Process5\\n━━━━━━━━━━━━━━━━\\nfallback_enabled: true\\ntype: AlternativeProcessor", fillcolor="#f5f5f5"];
+    "StartNode" [label="StartNode\\n━━━━━━━━━━━━━━━━\\ninput_file: /data/input.txt\\ntype: Source", fillcolor="#f5f5f5"];
+
+    // Connections
+    "StartNode" -> "Process1";
+    "StartNode" -> "Process2" [label="Process2: condition == true"];
+    "StartNode" -> "Process3" [label="Process3: error_count \> 5"];
+    "Process1" -> "Process4";
+    "Process1" -> "ErrorHandler";
+    "Process2" -> "Process4" [label="Process4: status == \"complete\""];
+    "Process2" -> "Process5" [label="Process5: status == \"pending\""];
+    "Process3" -> "ErrorHandler" [label="ErrorHandler: retry_count \>= max_retries"];
+    "Process3" -> "Process5";
+    "Process4" -> "OutputNode";
+    "Process5" -> "OutputNode" [label="OutputNode: validation_passed == true"];
+    "Process5" -> "ErrorHandler" [label="ErrorHandler: validation_passed == false"];
+    "ErrorHandler" -> "AdminConsole" [label="AdminConsole: alert_severity == \"critical\""];
+    "OutputNode" -> "FinalNode";
+    "AdminConsole" -> "FinalNode";
+}

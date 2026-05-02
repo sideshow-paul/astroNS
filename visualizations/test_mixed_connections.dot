@@ -1,0 +1,43 @@
+digraph NetworkFlow {
+    // Graph settings
+    rankdir=TB;
+    node [shape=none, fontname="Arial"];
+    edge [fontname="Arial", fontsize=12];
+    bgcolor="white";
+    pad=0.5;
+
+    // Title
+    labelloc="t";
+    label="Network Flow Diagram";
+    fontsize=24;
+    fontname="Arial";
+
+    // Nodes
+    "AdminConsole" [label=<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f5f5f5" COLOR="#666666"><TR><TD COLSPAN="2" ALIGN="CENTER"><FONT POINT-SIZE="16" COLOR="#666666"><B>AdminConsole</B></FONT></TD></TR><TR><TD COLSPAN="2"><HR/></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">port:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">8080</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">refresh_rate:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">60</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">type:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">MonitoringDashboard</FONT></TD></TR></TABLE>>];
+    "ErrorHandler" [label=<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f5f5f5" COLOR="#666666"><TR><TD COLSPAN="2" ALIGN="CENTER"><FONT POINT-SIZE="16" COLOR="#666666"><B>ErrorHandler</B></FONT></TD></TR><TR><TD COLSPAN="2"><HR/></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">log_level:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">ERROR</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">send_alerts:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">true</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">type:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">ErrorLogger</FONT></TD></TR></TABLE>>];
+    "FinalNode" [label=<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f5f5f5" COLOR="#666666"><TR><TD COLSPAN="2" ALIGN="CENTER"><FONT POINT-SIZE="16" COLOR="#666666"><B>FinalNode</B></FONT></TD></TR><TR><TD COLSPAN="2"><HR/></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">cleanup:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">true</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">type:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">Terminator</FONT></TD></TR></TABLE>>];
+    "OutputNode" [label=<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f5f5f5" COLOR="#666666"><TR><TD COLSPAN="2" ALIGN="CENTER"><FONT POINT-SIZE="16" COLOR="#666666"><B>OutputNode</B></FONT></TD></TR><TR><TD COLSPAN="2"><HR/></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">compression:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">gzip</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">output_path:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">/data/output.json</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">type:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">DataWriter</FONT></TD></TR></TABLE>>];
+    "Process1" [label=<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f5f5f5" COLOR="#666666"><TR><TD COLSPAN="2" ALIGN="CENTER"><FONT POINT-SIZE="16" COLOR="#666666"><B>Process1</B></FONT></TD></TR><TR><TD COLSPAN="2"><HR/></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">algorithm:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">simple</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">type:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">BasicProcessor</FONT></TD></TR></TABLE>>];
+    "Process2" [label=<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f5f5f5" COLOR="#666666"><TR><TD COLSPAN="2" ALIGN="CENTER"><FONT POINT-SIZE="16" COLOR="#666666"><B>Process2</B></FONT></TD></TR><TR><TD COLSPAN="2"><HR/></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">threshold:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">0.8</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">type:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">ConditionalProcessor</FONT></TD></TR></TABLE>>];
+    "Process3" [label=<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f5f5f5" COLOR="#666666"><TR><TD COLSPAN="2" ALIGN="CENTER"><FONT POINT-SIZE="16" COLOR="#666666"><B>Process3</B></FONT></TD></TR><TR><TD COLSPAN="2"><HR/></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">max_retries:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">3</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">type:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">ErrorProcessor</FONT></TD></TR></TABLE>>];
+    "Process4" [label=<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f5f5f5" COLOR="#666666"><TR><TD COLSPAN="2" ALIGN="CENTER"><FONT POINT-SIZE="16" COLOR="#666666"><B>Process4</B></FONT></TD></TR><TR><TD COLSPAN="2"><HR/></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">merge_strategy:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">concatenate</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">type:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">MergeProcessor</FONT></TD></TR></TABLE>>];
+    "Process5" [label=<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f5f5f5" COLOR="#666666"><TR><TD COLSPAN="2" ALIGN="CENTER"><FONT POINT-SIZE="16" COLOR="#666666"><B>Process5</B></FONT></TD></TR><TR><TD COLSPAN="2"><HR/></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">fallback_enabled:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">true</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">type:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">AlternativeProcessor</FONT></TD></TR></TABLE>>];
+    "StartNode" [label=<<TABLE BORDER="2" CELLBORDER="0" CELLSPACING="0" CELLPADDING="4" BGCOLOR="#f5f5f5" COLOR="#666666"><TR><TD COLSPAN="2" ALIGN="CENTER"><FONT POINT-SIZE="16" COLOR="#666666"><B>StartNode</B></FONT></TD></TR><TR><TD COLSPAN="2"><HR/></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">input_file:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">/data/input.txt</FONT></TD></TR><TR><TD ALIGN="LEFT"><FONT POINT-SIZE="12">type:</FONT></TD><TD ALIGN="LEFT"><FONT POINT-SIZE="12" COLOR="#555555">Source</FONT></TD></TR></TABLE>>];
+
+    // Connections
+    "StartNode" -> "Process1";
+    "StartNode" -> "Process2" [label="Process2: condition == true"];
+    "StartNode" -> "Process3" [label="Process3: error_count \> 5"];
+    "Process1" -> "Process4";
+    "Process1" -> "ErrorHandler";
+    "Process2" -> "Process4" [label="Process4: status == \"complete\""];
+    "Process2" -> "Process5" [label="Process5: status == \"pending\""];
+    "Process3" -> "ErrorHandler" [label="ErrorHandler: retry_count \>= max_retries"];
+    "Process3" -> "Process5";
+    "Process4" -> "OutputNode";
+    "Process5" -> "OutputNode" [label="OutputNode: validation_passed == true"];
+    "Process5" -> "ErrorHandler" [label="ErrorHandler: validation_passed == false"];
+    "ErrorHandler" -> "AdminConsole" [label="AdminConsole: alert_severity == \"critical\""];
+    "OutputNode" -> "FinalNode";
+    "AdminConsole" -> "FinalNode";
+}

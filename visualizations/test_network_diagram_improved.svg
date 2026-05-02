@@ -1,0 +1,210 @@
+<svg width="1600" height="2748" xmlns="http://www.w3.org/2000/svg">
+<defs>
+    <!-- Arrow marker definition -->
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+    
+    <!-- Drop shadow filter -->
+    <filter id="dropshadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="2" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+<text x="800.0" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#333">Network Flow Diagram</text>
+<line x1="800.0" y1="230.0" x2="800.0" y2="112.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="171.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">ParseTaskingMessage: None</text>
+<line x1="800.0" y1="408.0" x2="800.0" y2="353.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="372.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">AdvanceSimulationTime:</text>
+<text x="820.0" y="388.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#888">successful_type == SimulatorControlMessage</text>
+<line x1="800.0" y1="408.0" x2="800.0" y2="495.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="443.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">UplinkTime:</text>
+<text x="820.0" y="459.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#888">successful_type == WrappedInputMessage</text>
+<path d="M 1000.0 420 Q 1188.0 260.0 976.0 100" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1188.0" y="260.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">FromQueue: None</text>
+<line x1="800.0" y1="665.0" x2="800.0" y2="664.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="664.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">ConvertUplinkTimeToDateTime: None</text>
+<path d="M 1050.0 740 Q 1205.0 660.0 960.0 580" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1205.0" y="660.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">UplinkTime: ~</text>
+<line x1="800.0" y1="816.0" x2="800.0" y2="824.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="820.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">ConvertAccessTimeToISO: None</text>
+<line x1="800.0" y1="976.0" x2="800.0" y2="876.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="926.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">CalculatePosition: None</text>
+<line x1="800.0" y1="1244.0" x2="800.0" y2="1036.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="1140.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">CalculateGSD: None</text>
+<line x1="616.0" y1="1220" x2="984.0" y2="1220" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="800.0" y="1200" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">CalculateGSD: ~</text>
+<line x1="800.0" y1="1404.0" x2="800.0" y2="1295.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="1349.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">DownlinkTime: None</text>
+<line x1="800.0" y1="1465.0" x2="800.0" y2="1464.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="1464.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">ConvertDownlinkTimeToDateTime: None</text>
+<path d="M 1050.0 1540 Q 1205.0 1460.0 960.0 1380" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1205.0" y="1460.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">DownlinkTime: ~</text>
+<path d="M 1050.0 1540 Q 1205.0 1060.0 960.0 580" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1205.0" y="1052.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">UplinkTime:</text>
+<text x="1205.0" y="1068.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#888">return msg[&apos;UplinkTime&apos;] + msg[&apos;downlinkTimeSecs&apos;]</text>
+<line x1="800.0" y1="1616.0" x2="800.0" y2="1615.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="1615.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">ProcessingTime: None</text>
+<line x1="800.0" y1="1785.0" x2="800.0" y2="1784.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="1784.5" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">ConvertProcessingTimeToDateTime: None</text>
+<path d="M 1050.0 1860 Q 1205.0 1780.0 960.0 1700" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1205.0" y="1780.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">ProcessingTime: ~</text>
+<path d="M 1050.0 1860 Q 1205.0 1620.0 960.0 1380" fill="none" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="1205.0" y="1612.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">DownlinkTime:</text>
+<text x="1205.0" y="1628.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#888">return msg[&apos;DownlinkTime&apos;] + msg[&apos;processingTimeSecs&apos;]</text>
+<line x1="800.0" y1="1936.0" x2="800.0" y2="1926.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="1931.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">ProductDelivery: None</text>
+<line x1="800.0" y1="2114.0" x2="800.0" y2="2122.0" stroke="#333" stroke-width="2" marker-end="url(#arrowhead)"/>
+<text x="820.0" y="2118.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="13" fill="#666">FinalNode: None</text>
+<rect x="624.0" y="-30.0" width="352" height="260" rx="10" fill="#e3f2fd" stroke="#1976d2" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="0.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1976d2">FromQueue</text>
+<line x1="644.0" y1="10.0" x2="956.0" y2="10.0" stroke="#ddd" stroke-width="1"/>
+<text x="634.0" y="30.0" font-family="Arial, sans-serif" font-size="12" fill="#555">max_retry_attempts: 3</text>
+<text x="634.0" y="48.0" font-family="Arial, sans-serif" font-size="12" fill="#555">poll_frequency_secs: 11.0</text>
+<text x="634.0" y="66.0" font-family="Arial, sans-serif" font-size="12" fill="#555">pulsar_server: pulsar://localhost:30000</text>
+<text x="634.0" y="84.0" font-family="Arial, sans-serif" font-size="12" fill="#555">retry_delay_secs: 10.0</text>
+<text x="634.0" y="102.0" font-family="Arial, sans-serif" font-size="12" fill="#555">retry_on_connection_error: true</text>
+<text x="634.0" y="120.0" font-family="Arial, sans-serif" font-size="12" fill="#555">simtime_field_name: simtime</text>
+<text x="634.0" y="138.0" font-family="Arial, sans-serif" font-size="12" fill="#555">sub_name: my-sub</text>
+<text x="634.0" y="156.0" font-family="Arial, sans-serif" font-size="12" fill="#555">timeout_secs: 50.0</text>
+<text x="634.0" y="174.0" font-family="Arial, sans-serif" font-size="12" fill="#555">topic_name: my-topic</text>
+<text x="634.0" y="192.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: PulsarTopicSource</text>
+<rect x="624.0" y="112.0" width="352" height="296" rx="10" fill="#f3e5f5" stroke="#7b1fa2" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="142.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#7b1fa2">ParseTaskingMessage</text>
+<line x1="644.0" y1="152.0" x2="956.0" y2="152.0" stroke="#ddd" stroke-width="1"/>
+<text x="634.0" y="172.0" font-family="Arial, sans-serif" font-size="12" fill="#555">error_key: parse_error</text>
+<text x="634.0" y="190.0" font-family="Arial, sans-serif" font-size="12" fill="#555">json_key: json_data</text>
+<text x="634.0" y="208.0" font-family="Arial, sans-serif" font-size="12" fill="#555">object_result_field: payload</text>
+<text x="634.0" y="226.0" font-family="Arial, sans-serif" font-size="12" fill="#555">parsed_object_key: parsed_object</text>
+<text x="634.0" y="244.0" font-family="Arial, sans-serif" font-size="12" fill="#555">preserve_json: false</text>
+<text x="634.0" y="262.0" font-family="Arial, sans-serif" font-size="12" fill="#555">pydantic_types: [&apos;WrappedInputMessage&apos;]</text>
+<text x="634.0" y="280.0" font-family="Arial, sans-serif" font-size="12" fill="#555">result_key: parsed_message</text>
+<text x="634.0" y="298.0" font-family="Arial, sans-serif" font-size="12" fill="#555">successful_type_key: successful_type</text>
+<text x="634.0" y="316.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 0.1</text>
+<text x="634.0" y="334.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_processing: 0.0</text>
+<text x="634.0" y="352.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: ParseJsonMessage</text>
+<text x="634.0" y="370.0" font-family="Arial, sans-serif" font-size="12" fill="#555">write_out_field_list: All</text>
+<rect x="600.0" y="353.0" width="400" height="134" rx="10" fill="#fff3e0" stroke="#f57c00" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="383.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#f57c00">AdvanceSimulationTime</text>
+<line x1="620.0" y1="393.0" x2="980.0" y2="393.0" stroke="#ddd" stroke-width="1"/>
+<text x="610.0" y="413.0" font-family="Arial, sans-serif" font-size="12" fill="#555">convert_unix_time: true</text>
+<text x="610.0" y="431.0" font-family="Arial, sans-serif" font-size="12" fill="#555">delay_key: advance_simulation_time_to_unix_ts</text>
+<text x="610.0" y="449.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: KeyDelayTime</text>
+<rect x="640.0" y="495.0" width="320" height="170" rx="10" fill="#e8f5e9" stroke="#388e3c" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="525.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#388e3c">UplinkTime</text>
+<line x1="660.0" y1="535.0" x2="940.0" y2="535.0" stroke="#ddd" stroke-width="1"/>
+<text x="650.0" y="555.0" font-family="Arial, sans-serif" font-size="12" fill="#555">population: [8 items]</text>
+<text x="650.0" y="573.0" font-family="Arial, sans-serif" font-size="12" fill="#555">result_key: uplinkTimeSecs</text>
+<text x="650.0" y="591.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 1</text>
+<text x="650.0" y="609.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: RandomDistrib</text>
+<text x="650.0" y="627.0" font-family="Arial, sans-serif" font-size="12" fill="#555">weights: [9 items]</text>
+<rect x="550.0" y="664.0" width="500" height="152" rx="10" fill="#fce4ec" stroke="#c2185b" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="694.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#c2185b">ConvertUplinkTimeToDateTime</text>
+<line x1="570.0" y1="704.0" x2="1030.0" y2="704.0" stroke="#ddd" stroke-width="1"/>
+<text x="560.0" y="724.0" font-family="Arial, sans-serif" font-size="12" fill="#555">def value_fn(sim_time,msg): return sim_time  + msg[&apos;uplinkTimeSecs&apos;]</text>
+<text x="560.0" y="742.0" font-family="Arial, sans-serif" font-size="12" fill="#555">result_key: UplinkTime</text>
+<text x="560.0" y="760.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 1</text>
+<text x="560.0" y="778.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: AddKeyValue</text>
+<rect x="550.0" y="824.0" width="500" height="152" rx="10" fill="#fce4ec" stroke="#c2185b" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="854.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#c2185b">ConvertAccessTimeToISO</text>
+<line x1="570.0" y1="864.0" x2="1030.0" y2="864.0" stroke="#ddd" stroke-width="1"/>
+<text x="560.0" y="884.0" font-family="Arial, sans-serif" font-size="12" fill="#555">def value_fn(sim_time,msg): import datetime; return datetime.datetime.fromtimest...</text>
+<text x="560.0" y="902.0" font-family="Arial, sans-serif" font-size="12" fill="#555">result_key: access_start_time_iso</text>
+<text x="560.0" y="920.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 0.1</text>
+<text x="560.0" y="938.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: AddKeyValue</text>
+<rect x="632.0" y="876.0" width="336" height="368" rx="10" fill="#f1f8e9" stroke="#689f38" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="906.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#689f38">CalculatePosition</text>
+<line x1="652.0" y1="916.0" x2="948.0" y2="916.0" stroke="#ddd" stroke-width="1"/>
+<text x="642.0" y="936.0" font-family="Arial, sans-serif" font-size="12" fill="#555">duration_seconds: 1.0</text>
+<text x="642.0" y="954.0" font-family="Arial, sans-serif" font-size="12" fill="#555">satellite_name_key: satellite_name</text>
+<text x="642.0" y="972.0" font-family="Arial, sans-serif" font-size="12" fill="#555">single_time_point: true</text>
+<text x="642.0" y="990.0" font-family="Arial, sans-serif" font-size="12" fill="#555">start_time_key: access_start_time_iso</text>
+<text x="642.0" y="1008.0" font-family="Arial, sans-serif" font-size="12" fill="#555">step_seconds: 1.0</text>
+<text x="642.0" y="1026.0" font-family="Arial, sans-serif" font-size="12" fill="#555">storage_key: geometry_results</text>
+<text x="642.0" y="1044.0" font-family="Arial, sans-serif" font-size="12" fill="#555">target_alt: 0.0</text>
+<text x="642.0" y="1062.0" font-family="Arial, sans-serif" font-size="12" fill="#555">target_alt_key: target_alt</text>
+<text x="642.0" y="1080.0" font-family="Arial, sans-serif" font-size="12" fill="#555">target_lat: 0.0</text>
+<text x="642.0" y="1098.0" font-family="Arial, sans-serif" font-size="12" fill="#555">target_lat_key: aimpoint_latitude</text>
+<text x="642.0" y="1116.0" font-family="Arial, sans-serif" font-size="12" fill="#555">target_lon: 0.0</text>
+<text x="642.0" y="1134.0" font-family="Arial, sans-serif" font-size="12" fill="#555">target_lon_key: aimpoint_longitude</text>
+<text x="642.0" y="1152.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 1.0</text>
+<text x="642.0" y="1170.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_processing: 0.0</text>
+<text x="642.0" y="1188.0" font-family="Arial, sans-serif" font-size="12" fill="#555">tle_file_path: ./data/satellites.json</text>
+<text x="642.0" y="1206.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: CalculateGeometry</text>
+<rect x="616.0" y="1036.0" width="368" height="368" rx="10" fill="#fff8e1" stroke="#ffa000" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="1066.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#ffa000">CalculateGSD</text>
+<line x1="636.0" y1="1076.0" x2="964.0" y2="1076.0" stroke="#ddd" stroke-width="1"/>
+<text x="626.0" y="1096.0" font-family="Arial, sans-serif" font-size="12" fill="#555">distance_key: distance_km</text>
+<text x="626.0" y="1114.0" font-family="Arial, sans-serif" font-size="12" fill="#555">distance_km: 400.0</text>
+<text x="626.0" y="1132.0" font-family="Arial, sans-serif" font-size="12" fill="#555">focal_length_mm: 500.0</text>
+<text x="626.0" y="1150.0" font-family="Arial, sans-serif" font-size="12" fill="#555">geometry_results_key: geometry_results</text>
+<text x="626.0" y="1168.0" font-family="Arial, sans-serif" font-size="12" fill="#555">gsd_storage_key: gsd_m_per_px</text>
+<text x="626.0" y="1186.0" font-family="Arial, sans-serif" font-size="12" fill="#555">image_height_px: 6000.0</text>
+<text x="626.0" y="1204.0" font-family="Arial, sans-serif" font-size="12" fill="#555">image_width_px: 4000.0</text>
+<text x="626.0" y="1222.0" font-family="Arial, sans-serif" font-size="12" fill="#555">sensor_height_mm: 36.0</text>
+<text x="626.0" y="1240.0" font-family="Arial, sans-serif" font-size="12" fill="#555">sensor_width_mm: 24.0</text>
+<text x="626.0" y="1258.0" font-family="Arial, sans-serif" font-size="12" fill="#555">source_pos_key: observer_position_ecef_km</text>
+<text x="626.0" y="1276.0" font-family="Arial, sans-serif" font-size="12" fill="#555">target_pos_key: target_position_ecef_km</text>
+<text x="626.0" y="1294.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 1.0</text>
+<text x="626.0" y="1312.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_processing: 0.0</text>
+<text x="626.0" y="1330.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: CalculateGSD</text>
+<text x="626.0" y="1348.0" font-family="Arial, sans-serif" font-size="12" fill="#555">use_ecef_positions: true</text>
+<text x="626.0" y="1366.0" font-family="Arial, sans-serif" font-size="12" fill="#555">use_sensor_height: true</text>
+<rect x="640.0" y="1295.0" width="320" height="170" rx="10" fill="#e8f5e9" stroke="#388e3c" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="1325.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#388e3c">DownlinkTime</text>
+<line x1="660.0" y1="1335.0" x2="940.0" y2="1335.0" stroke="#ddd" stroke-width="1"/>
+<text x="650.0" y="1355.0" font-family="Arial, sans-serif" font-size="12" fill="#555">population: [8 items]</text>
+<text x="650.0" y="1373.0" font-family="Arial, sans-serif" font-size="12" fill="#555">result_key: downlinkTimeSecs</text>
+<text x="650.0" y="1391.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 1</text>
+<text x="650.0" y="1409.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: RandomDistrib</text>
+<text x="650.0" y="1427.0" font-family="Arial, sans-serif" font-size="12" fill="#555">weights: [9 items]</text>
+<rect x="550.0" y="1464.0" width="500" height="152" rx="10" fill="#fce4ec" stroke="#c2185b" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="1494.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#c2185b">ConvertDownlinkTimeToDateTime</text>
+<line x1="570.0" y1="1504.0" x2="1030.0" y2="1504.0" stroke="#ddd" stroke-width="1"/>
+<text x="560.0" y="1524.0" font-family="Arial, sans-serif" font-size="12" fill="#555">def value_fn(sim_time,msg): return msg[&apos;UplinkTime&apos;] + msg[&apos;downlinkTimeSecs&apos;] </text>
+<text x="560.0" y="1542.0" font-family="Arial, sans-serif" font-size="12" fill="#555">result_key: DownlinkTime</text>
+<text x="560.0" y="1560.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 1</text>
+<text x="560.0" y="1578.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: AddKeyValue</text>
+<rect x="640.0" y="1615.0" width="320" height="170" rx="10" fill="#e8f5e9" stroke="#388e3c" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="1645.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#388e3c">ProcessingTime</text>
+<line x1="660.0" y1="1655.0" x2="940.0" y2="1655.0" stroke="#ddd" stroke-width="1"/>
+<text x="650.0" y="1675.0" font-family="Arial, sans-serif" font-size="12" fill="#555">population: [8 items]</text>
+<text x="650.0" y="1693.0" font-family="Arial, sans-serif" font-size="12" fill="#555">result_key: processingTimeSecs</text>
+<text x="650.0" y="1711.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 1</text>
+<text x="650.0" y="1729.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: RandomDistrib</text>
+<text x="650.0" y="1747.0" font-family="Arial, sans-serif" font-size="12" fill="#555">weights: [9 items]</text>
+<rect x="550.0" y="1784.0" width="500" height="152" rx="10" fill="#fce4ec" stroke="#c2185b" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="1814.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#c2185b">ConvertProcessingTimeToDateTime</text>
+<line x1="570.0" y1="1824.0" x2="1030.0" y2="1824.0" stroke="#ddd" stroke-width="1"/>
+<text x="560.0" y="1844.0" font-family="Arial, sans-serif" font-size="12" fill="#555">def value_fn(sim_time,msg): return msg[&apos;DownlinkTime&apos;] + msg[&apos;processingTimeSecs&apos;]</text>
+<text x="560.0" y="1862.0" font-family="Arial, sans-serif" font-size="12" fill="#555">result_key: ProcessingTime</text>
+<text x="560.0" y="1880.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 1</text>
+<text x="560.0" y="1898.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: AddKeyValue</text>
+<rect x="624.0" y="1926.0" width="352" height="188" rx="10" fill="#ffebee" stroke="#c62828" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="1956.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#c62828">ProductDelivery</text>
+<line x1="644.0" y1="1966.0" x2="956.0" y2="1966.0" stroke="#ddd" stroke-width="1"/>
+<text x="634.0" y="1986.0" font-family="Arial, sans-serif" font-size="12" fill="#555">pulsar_server: pulsar://localhost:30000</text>
+<text x="634.0" y="2004.0" font-family="Arial, sans-serif" font-size="12" fill="#555">pydantic_class: CollectedTargetData</text>
+<text x="634.0" y="2022.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 1</text>
+<text x="634.0" y="2040.0" font-family="Arial, sans-serif" font-size="12" fill="#555">topic_name: simulator_output_topic</text>
+<text x="634.0" y="2058.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: PulsarTopicSink</text>
+<text x="634.0" y="2076.0" font-family="Arial, sans-serif" font-size="12" fill="#555">use_pydantic_validation: true</text>
+<rect x="640.0" y="2122.0" width="320" height="116" rx="10" fill="#eceff1" stroke="#37474f" stroke-width="2" filter="url(#dropshadow)"/>
+<text x="800.0" y="2152.0" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#37474f">FinalNode</text>
+<line x1="660.0" y1="2162.0" x2="940.0" y2="2162.0" stroke="#ddd" stroke-width="1"/>
+<text x="650.0" y="2182.0" font-family="Arial, sans-serif" font-size="12" fill="#555">time_delay: 0</text>
+<text x="650.0" y="2200.0" font-family="Arial, sans-serif" font-size="12" fill="#555">type: DelayTime</text>
+<rect x="50" y="2598" width="250" height="120" rx="5" fill="#f5f5f5" stroke="#999" stroke-width="1"/>
+  <text x="175" y="2623" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#333">Legend</text>
+  <text x="60" y="2643" font-family="Arial, sans-serif" font-size="12" fill="#555">Node box = YAML section</text>
+  <text x="60" y="2663" font-family="Arial, sans-serif" font-size="12" fill="#555">Properties = key: value pairs</text>
+  <text x="60" y="2683" font-family="Arial, sans-serif" font-size="12" fill="#555">Arrow = sub-key reference</text>
+  <text x="60" y="2703" font-family="Arial, sans-serif" font-size="12" fill="#555">~ = Empty/null value</text>
+</svg>

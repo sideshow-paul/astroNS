@@ -1,0 +1,116 @@
+DEFAULT:
+  msg_size_key: bytes
+  seed: 42
+  sim_hours: 2
+  day_type: BIZ
+  base_epoch: 1736121600
+
+SubnetAgg_TestSubnet:
+  type: SubnetAggregator
+  subnet_name: TestSubnet
+  subnet_cidr: "10.0.1.0/24"
+  bandwidth_profiles:
+    - day_type: BIZ
+      hour: 0
+      mean_bps: 500000.0
+      p95_bps: 1200000.0
+      max_bps: 2000000.0
+    - day_type: BIZ
+      hour: 1
+      mean_bps: 300000.0
+      p95_bps: 800000.0
+      max_bps: 1500000.0
+  ConnLogSink: ~
+  FlowSink: ~
+
+Gen_10_0_1_50:
+  type: TrafficGenerator
+  device_ip: "10.0.1.50"
+  subnet: TestSubnet
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      interarrival_mean: 30.0
+      interarrival_variance: 100.0
+      duration_log_mean: 1.5
+      duration_log_variance: 0.5
+      flow_count_mean: 120.0
+      sample_count: 50
+    BIZ_1:
+      interarrival_mean: 45.0
+      interarrival_variance: 200.0
+      duration_log_mean: 2.0
+      duration_log_variance: 0.8
+      flow_count_mean: 80.0
+      sample_count: 40
+  Dest_10_0_1_50: ~
+
+Dest_10_0_1_50:
+  type: WeightedDestSelector
+  device_ip: "10.0.1.50"
+  destinations:
+    BIZ_0:
+      - ip: "8.8.8.8"
+        port: 443
+        protocol: tcp
+        weight: 0.4
+      - ip: "1.1.1.1"
+        port: 53
+        protocol: udp
+        weight: 0.3
+      - ip: "13.107.42.14"
+        port: 443
+        protocol: tcp
+        weight: 0.3
+    BIZ_1:
+      - ip: "8.8.8.8"
+        port: 443
+        protocol: tcp
+        weight: 0.5
+      - ip: "1.1.1.1"
+        port: 53
+        protocol: udp
+        weight: 0.2
+      - ip: "52.96.108.170"
+        port: 443
+        protocol: tcp
+        weight: 0.3
+  Bytes_10_0_1_50: ~
+
+Bytes_10_0_1_50:
+  type: BytesSampler
+  device_ip: "10.0.1.50"
+  bytes_profiles:
+    "8.8.8.8":
+      bytes_log_mean: 7.5
+      bytes_log_variance: 1.2
+      packets_log_mean: 3.0
+      packets_log_variance: 0.6
+      response_ratio: 4.5
+    "1.1.1.1":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+    "13.107.42.14":
+      bytes_log_mean: 8.0
+      bytes_log_variance: 1.5
+      packets_log_mean: 4.0
+      packets_log_variance: 0.8
+      response_ratio: 3.0
+    "52.96.108.170":
+      bytes_log_mean: 9.0
+      bytes_log_variance: 2.0
+      packets_log_mean: 5.0
+      packets_log_variance: 1.0
+      response_ratio: 6.0
+  SubnetAgg_TestSubnet: ~
+
+ConnLogSink:
+  type: ZeekConnLogSink
+  output_file: /tmp/angler_sim_test/conn.log
+
+FlowSink:
+  type: FlowRecordSink
+  output_file: /tmp/angler_sim_test/flow_records.csv
