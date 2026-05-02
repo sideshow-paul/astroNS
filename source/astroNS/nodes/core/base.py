@@ -65,6 +65,9 @@ class BaseNode:
         str, List[Tuple[float, datetime.date, "BaseNode", str, List[str], float]]
     ] = {}
     stop_signal = 999999.42
+    # When True, skip msg_history and per-node list accumulation to save memory.
+    # Set via env.lean_mode or ASTRONS_LEAN_MODE env var.
+    lean_mode: bool = False
 
     nodes: Dict[str, "BaseNode"] = {}
     node_list: List["BaseNode"] = []
@@ -286,6 +289,11 @@ class BaseNode:
          0.0%|    0.00|01:23:45.000000|     test_name      |[   BaseNode   ]|testID|Msg done.
 
         """
+
+        if BaseNode.lean_mode:
+            if not data_out_list:
+                self.record_end_of_data(data_in)
+            return
 
         # If this message came from another node mark it's time sent otherwise
         # this message originated from this node and its origin is now
@@ -663,6 +671,10 @@ class BaseNode:
 
         # This node has processed an additional message
         self.msgs_processed += 1
+
+        if BaseNode.lean_mode:
+            return
+
         # Add the message ID to the list
         self.msg_ids.append(data_in_id)  # data_in["ID"])
         # List the time received

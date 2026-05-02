@@ -188,15 +188,16 @@ def postprocess_network(env):
                     env.network_nodes, node_stats_file, env.node_stats_history
                 )
 
-    with open(
-        "{}/msg_history.txt".format(env.path_to_results), "w"
-    ) as msg_history_file:
-        output_msg_history(BaseNode.msg_history, msg_history_file)
+    if not BaseNode.lean_mode:
+        with open(
+            "{}/msg_history.txt".format(env.path_to_results), "w"
+        ) as msg_history_file:
+            output_msg_history(BaseNode.msg_history, msg_history_file)
 
-    with open(
-        "{}/msg_history.csv".format(env.path_to_results), "w"
-    ) as msg_history_file:
-        output_msg_history_tab(BaseNode.msg_history, msg_history_file)
+        with open(
+            "{}/msg_history.csv".format(env.path_to_results), "w"
+        ) as msg_history_file:
+            output_msg_history_tab(BaseNode.msg_history, msg_history_file)
 
     if env.final_node_states:
         with open(
@@ -285,6 +286,11 @@ def main(
         real_time_factor: determines time unit for real_time mode. Default 1 unit = one second
         promise_threads: creates multiprocessing threads to parallelize node promises
     """
+
+    # Enable lean mode to skip msg_history + per-node list accumulation (saves GB of RAM)
+    from nodes.core.base import BaseNode
+    if os.environ.get("ASTRONS_LEAN_MODE", "").lower() in ("1", "true", "yes"):
+        BaseNode.lean_mode = True
 
     # env required by the simpy frameworks
     env = (
