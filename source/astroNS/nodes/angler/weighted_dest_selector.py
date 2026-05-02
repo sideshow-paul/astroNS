@@ -2,8 +2,8 @@
 WeightedDestSelector — categorical destination picker per device/hour.
 
 Receives flow messages from TrafficGenerator and adds destination IP,
-port, and protocol fields based on weighted categorical distributions
-observed per (day_type, hour_of_day).
+port, protocol, and QoS class fields based on weighted categorical
+distributions observed per (day_type, hour_of_day).
 
 YAML usage:
     Dest_10_0_1_50:
@@ -15,10 +15,12 @@ YAML usage:
             port: 443
             protocol: tcp
             weight: 0.34
+            qos_class: AF        # optional: EF, AF, or BE (default)
           - ip: "1.1.1.1"
             port: 53
             protocol: udp
             weight: 0.21
+            qos_class: EF
       Bytes_10_0_1_50: ~
 """
 import math
@@ -112,11 +114,14 @@ class WeightedDestSelector(BaseNode):
                     if isinstance(proto, int):
                         proto = {1: "icmp", 6: "tcp", 17: "udp"}.get(proto, "tcp")
                     data_out["protocol"] = str(proto)
+                    qos = dest.get("qos_class", "BE")
+                    data_out["qos_class"] = qos if qos in ("EF", "AF", "BE") else "BE"
                 else:
                     # No destination table — assign defaults
                     data_out["dst_ip"] = "0.0.0.0"
                     data_out["dst_port"] = 0
                     data_out["protocol"] = "tcp"
+                    data_out["qos_class"] = "BE"
 
                 processing_time = 0.0
                 data_out_list = [data_out]
@@ -124,6 +129,7 @@ class WeightedDestSelector(BaseNode):
                 print(
                     self.log_prefix(data_in["ID"])
                     + f"Dest selected: {data_out['dst_ip']}:{data_out['dst_port']}/{data_out['protocol']}"
+                    + f" qos={data_out['qos_class']}"
                 )
             else:
                 data_out_list = []

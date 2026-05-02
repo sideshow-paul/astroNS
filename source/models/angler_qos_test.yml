@@ -1,0 +1,88 @@
+DEFAULT:
+  msg_size_key: bytes
+  seed: 42
+  sim_hours: 1
+  day_type: BIZ
+  base_epoch: 1736121600
+
+SubnetAgg_QoSTest:
+  type: SubnetAggregator
+  subnet_name: QoSTest
+  subnet_cidr: "10.0.1.0/24"
+  bandwidth_profiles:
+    - day_type: BIZ
+      hour: 0
+      mean_bps: 100000.0
+      p95_bps: 300000.0
+      max_bps: 500000.0
+  ConnLogSink: ~
+  FlowSink: ~
+
+Gen_10_0_1_10:
+  type: TrafficGenerator
+  device_ip: "10.0.1.10"
+  subnet: QoSTest
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      interarrival_mean: 10.0
+      interarrival_variance: 25.0
+      duration_log_mean: 1.0
+      duration_log_variance: 0.3
+      flow_count_mean: 300.0
+      sample_count: 50
+  Dest_10_0_1_10: ~
+
+Dest_10_0_1_10:
+  type: WeightedDestSelector
+  device_ip: "10.0.1.10"
+  destinations:
+    BIZ_0:
+      - ip: "8.8.8.8"
+        port: 443
+        protocol: tcp
+        weight: 0.3
+        qos_class: EF
+      - ip: "13.107.42.14"
+        port: 443
+        protocol: tcp
+        weight: 0.4
+        qos_class: AF
+      - ip: "1.1.1.1"
+        port: 53
+        protocol: udp
+        weight: 0.3
+        qos_class: BE
+  Bytes_10_0_1_10: ~
+
+Bytes_10_0_1_10:
+  type: BytesSampler
+  device_ip: "10.0.1.10"
+  bytes_profiles:
+    "8.8.8.8":
+      bytes_log_mean: 7.5
+      bytes_log_variance: 1.2
+      packets_log_mean: 3.0
+      packets_log_variance: 0.6
+      response_ratio: 4.5
+    "13.107.42.14":
+      bytes_log_mean: 8.0
+      bytes_log_variance: 1.5
+      packets_log_mean: 4.0
+      packets_log_variance: 0.8
+      response_ratio: 3.0
+    "1.1.1.1":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+  SubnetAgg_QoSTest: ~
+
+ConnLogSink:
+  type: ZeekConnLogSink
+  output_file: /tmp/angler_qos_test/conn.log
+
+FlowSink:
+  type: FlowRecordSink
+  output_file: /tmp/angler_qos_test/flow_records.csv

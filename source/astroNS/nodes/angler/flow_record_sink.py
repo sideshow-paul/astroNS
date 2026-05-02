@@ -33,6 +33,8 @@ FLOW_COLUMNS = [
     "resp_pkts",
     "duration",
     "subnet",
+    "qos_class",
+    "qos_delay_ms",
 ]
 
 
@@ -101,6 +103,8 @@ class FlowRecordSink(BaseNode):
                     "resp_pkts": data_in.get("resp_pkts", 0),
                     "duration": f"{duration:.6f}",
                     "subnet": data_in.get("subnet", ""),
+                    "qos_class": data_in.get("qos_class", "BE"),
+                    "qos_delay_ms": data_in.get("qos_delay_ms", 0.0),
                 }
 
                 if self._writer:
