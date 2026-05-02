@@ -11,6 +11,8 @@ YAML usage:
       type: SubnetAggregator
       subnet_name: "IoT"
       subnet_cidr: "10.0.1.0/24"
+      latitude: 38.8882      # optional, for Angler map placement
+      longitude: -77.0199    # optional, for Angler map placement
       bandwidth_profiles:
         - day_type: BIZ
           hour: 8
@@ -35,6 +37,8 @@ class SubnetAggregator(BaseNode):
 
         self.subnet_name: str = configuration.get("subnet_name", "Unknown")
         self.subnet_cidr: str = configuration.get("subnet_cidr", "0.0.0.0/0")
+        self.latitude: Optional[float] = configuration.get("latitude")
+        self.longitude: Optional[float] = configuration.get("longitude")
         raw_bw = configuration.get("bandwidth_profiles") or []
 
         # Index bandwidth profiles by (day_type, hour) for quick lookup
