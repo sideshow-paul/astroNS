@@ -111,8 +111,13 @@ class ZeekConnLogSink(BaseNode):
                 resp_pkts = data_in.get("resp_pkts", 0)
                 src_port = self.rng.randint(1024, 65535)
 
+                # QoS delay shifts flow_start forward (queuing adds latency)
+                qos_delay_ms = data_in.get("qos_delay_ms", 0.0) or 0.0
+                qos_delay_sec = qos_delay_ms / 1000.0
+                flow_start = data_in.get("flow_start", 0.0) + qos_delay_sec
+
                 conn_entry = {
-                    "ts": data_in.get("flow_start", 0.0),
+                    "ts": flow_start,
                     "uid": uid,
                     "id.orig_h": data_in.get("src_ip", "0.0.0.0"),
                     "id.orig_p": src_port,
@@ -136,6 +141,13 @@ class ZeekConnLogSink(BaseNode):
                     "resp_ip_bytes": resp_bytes + (resp_pkts * 40),
                     "_path": "conn",
                 }
+
+                # Include QoS metadata when present
+                qos_class = data_in.get("qos_class")
+                if qos_class:
+                    conn_entry["qos_class"] = qos_class
+                if qos_delay_ms > 0:
+                    conn_entry["qos_delay_ms"] = round(qos_delay_ms, 2)
 
                 if self._file:
                     self._file.write(json.dumps(conn_entry) + "\n")

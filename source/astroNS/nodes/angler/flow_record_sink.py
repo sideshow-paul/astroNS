@@ -84,7 +84,9 @@ class FlowRecordSink(BaseNode):
                     processing_time = 0.0
                     continue
 
-                flow_start = data_in.get("flow_start", 0.0)
+                # QoS delay shifts flow_start forward (queuing adds latency)
+                qos_delay_ms = data_in.get("qos_delay_ms", 0.0) or 0.0
+                flow_start = data_in.get("flow_start", 0.0) + (qos_delay_ms / 1000.0)
                 duration = data_in.get("duration", 0.0) or 0.0
                 flow_end = flow_start + duration
                 src_port = self.rng.randint(1024, 65535)

@@ -198,7 +198,9 @@ class SubnetAggregator(BaseNode):
                     data_out["qos_class"] = qos_class
                     data_out["qos_delay_ms"] = round(qos_delay_ms, 2)
 
-                processing_time = 0.0
+                # Inject QoS delay into SimPy timeline so congestion
+                # creates real backpressure on upstream flow generation.
+                processing_time = qos_delay_ms / 1000.0
                 data_out_list = [data_out]
 
                 if not data_in.get("_skip"):
