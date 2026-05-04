@@ -142,9 +142,13 @@ class ZeekConnLogSink(BaseNode):
                     "_path": "conn",
                 }
 
-                # Include TCP handshake duration when present (RTT in seconds)
+                # Include TCP handshake duration when present (RTT in seconds).
+                # For TCP flows, queuing delay (from SubnetAggregator) inflates
+                # the SYN-ACK round-trip, so we add it to the base RTT.
                 tcp_hs_ms = data_in.get("tcp_handshake_ms")
                 if tcp_hs_ms is not None and tcp_hs_ms > 0:
+                    if protocol == "tcp" and qos_delay_ms > 0:
+                        tcp_hs_ms = tcp_hs_ms + qos_delay_ms
                     conn_entry["tcp_handshake_duration"] = round(tcp_hs_ms / 1000.0, 6)
 
                 # Include QoS metadata when present

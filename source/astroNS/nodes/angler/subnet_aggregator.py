@@ -48,6 +48,11 @@ class SubnetAggregator(BaseNode):
         self.longitude: Optional[float] = configuration.get("longitude")
         raw_bw = configuration.get("bandwidth_profiles") or []
 
+        # Per-subnet link capacity override (separate from observed max_bps).
+        # When set, utilization = traffic / link_capacity instead of / max_bps,
+        # letting what-if scenarios saturate against a real link ceiling.
+        self.link_capacity_bps: Optional[float] = configuration.get("link_capacity_bps")
+
         # Index bandwidth profiles by (day_type, hour) for quick lookup
         self.bw_profiles: Dict[str, Dict[str, float]] = {}
         for entry in raw_bw:
@@ -90,40 +95,63 @@ class SubnetAggregator(BaseNode):
             self._second_bytes_af = 0
             self._second_bytes_be = 0
 
+    # Per-class parameters for the M/M/1-inspired queue model.
+    # service_time_ms: baseline per-packet service time at the queue
+    # max_delay_ms:    hard ceiling (models finite buffer / drop)
+    # onset:           utilization fraction where queuing starts
+    _QOS_PARAMS = {
+        "EF": {"service_time_ms": 0.5,  "max_delay_ms": 10.0,   "onset": 0.90},
+        "AF": {"service_time_ms": 1.0,  "max_delay_ms": 200.0,  "onset": 0.50},
+        "BE": {"service_time_ms": 2.0,  "max_delay_ms": 1000.0, "onset": 0.30},
+    }
+
     def _calculate_qos_delay(self, flow_bytes: int, qos_class: str,
-                              max_bps: float) -> float:
-        """Calculate queuing delay in milliseconds based on QoS class
-        and current bandwidth utilization.
+                              capacity_bps: float,
+                              mean_bps: float = 0.0) -> float:
+        """Calculate queuing delay in milliseconds using an M/M/1-style
+        queue approximation: delay = service_time * rho / (1 - rho).
 
-        Returns delay in ms:
-          EF: 0 ms (priority, always passes)
-          AF: 0-50 ms proportional to congestion
-          BE: 0-200 ms proportional to congestion, increases sharply near max
+        Utilization (rho) is the *higher* of:
+          - profile_rho: mean_bps / capacity  (steady-state from the profile)
+          - instant_rho: per-second bytes / capacity  (actual burst this second)
+
+        The profile_rho term is critical for what-if scenarios: simulated
+        traffic is sparse per-second, but profile_rho captures the expected
+        sustained load, making bandwidth changes visible in the QoS output.
+
+        At saturation (rho >= 1) the delay clamps to max_delay_ms.
+        Per-class onset thresholds ensure EF < AF < BE ordering:
+          EF — priority queue, delay only near saturation
+          AF — assured forwarding, moderate onset
+          BE — best effort, earliest onset, highest ceiling
         """
-        if max_bps <= 0:
+        if capacity_bps <= 0:
             return 0.0
 
-        # Current utilization as fraction of max (bits per second)
-        current_bps = self._second_bytes * 8
-        utilization = current_bps / max_bps
+        params = self._QOS_PARAMS.get(qos_class, self._QOS_PARAMS["BE"])
 
-        if qos_class == "EF":
-            # Priority: zero queuing delay regardless of utilization
+        # Steady-state utilization from the bandwidth profile
+        profile_rho = mean_bps / capacity_bps if mean_bps > 0 else 0.0
+
+        # Instantaneous utilization from per-second byte tracking
+        instant_rho = (self._second_bytes * 8) / capacity_bps
+
+        # Use the higher — profile_rho ensures what-if effects are visible
+        # even when per-second simulated traffic is sparse
+        rho = max(profile_rho, instant_rho)
+
+        if rho < params["onset"]:
             return 0.0
-        elif qos_class == "AF":
-            # Assured: small delay only when utilization > 80%
-            if utilization < 0.8:
-                return 0.0
-            # Linear ramp: 0ms at 80% → 50ms at 100%+
-            congestion = min(2.0, (utilization - 0.8) / 0.2)
-            return congestion * 25.0
-        else:
-            # Best Effort: delay ramps from 60% utilization
-            if utilization < 0.6:
-                return 0.0
-            # Quadratic ramp: 0ms at 60% → 200ms at 100%+
-            congestion = min(2.0, (utilization - 0.6) / 0.4)
-            return congestion * congestion * 50.0
+
+        if rho >= 1.0:
+            # Saturated — clamp to max delay
+            return params["max_delay_ms"]
+
+        # M/M/1 queuing delay: service_time * rho / (1 - rho)
+        # Shifted so delay is 0 at onset and grows from there
+        effective_rho = (rho - params["onset"]) / (1.0 - params["onset"])
+        delay = params["service_time_ms"] * effective_rho / (1.0 - effective_rho)
+        return min(delay, params["max_delay_ms"])
 
     def execute(self):
         """Execute generator — receives flow messages, tracks bandwidth
@@ -172,23 +200,31 @@ class SubnetAggregator(BaseNode):
                     qos_delay_ms = 0.0
 
                     if bw_profile and flow_bytes > 0:
-                        max_bps = bw_profile.get("max_bps", 0) or 0.0
+                        # Use explicit link capacity if configured, else
+                        # fall back to observed max_bps from the profile.
+                        capacity_bps = (
+                            self.link_capacity_bps
+                            or bw_profile.get("max_bps", 0)
+                            or 0.0
+                        )
+                        mean_bps = bw_profile.get("mean_bps", 0) or 0.0
 
-                        if max_bps > 0:
+                        if capacity_bps > 0:
                             # Calculate QoS-aware queuing delay
                             qos_delay_ms = self._calculate_qos_delay(
-                                flow_bytes, qos_class, max_bps
+                                flow_bytes, qos_class, capacity_bps,
+                                mean_bps
                             )
                             self.total_qos_delay_ms += qos_delay_ms
 
                             # Log bandwidth warnings
                             duration = data_in.get("duration", 1.0) or 1.0
                             flow_bps = (flow_bytes * 8) / duration
-                            if flow_bps > max_bps:
+                            if flow_bps > capacity_bps:
                                 print(
                                     self.log_prefix(data_in["ID"])
                                     + f"BW WARNING: {self.subnet_name} flow "
-                                    + f"{flow_bps:.0f} bps > max {max_bps:.0f} bps"
+                                    + f"{flow_bps:.0f} bps > capacity {capacity_bps:.0f} bps"
                                     + f" [qos={qos_class}]"
                                 )
 
