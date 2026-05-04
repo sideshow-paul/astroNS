@@ -142,6 +142,11 @@ class ZeekConnLogSink(BaseNode):
                     "_path": "conn",
                 }
 
+                # Include TCP handshake duration when present (RTT in seconds)
+                tcp_hs_ms = data_in.get("tcp_handshake_ms")
+                if tcp_hs_ms is not None and tcp_hs_ms > 0:
+                    conn_entry["tcp_handshake_duration"] = round(tcp_hs_ms / 1000.0, 6)
+
                 # Include QoS metadata when present
                 qos_class = data_in.get("qos_class")
                 if qos_class:

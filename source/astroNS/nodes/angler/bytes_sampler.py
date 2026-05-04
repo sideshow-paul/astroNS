@@ -113,13 +113,31 @@ class BytesSampler(BaseNode):
                 data_out["resp_pkts"] = resp_pkts
                 data_out[self.msg_size_key] = orig_bytes + resp_bytes
 
+                # Sample RTT from per-destination profile when available
+                rtt_mean = profile.get("rtt_ms_mean")
+                if rtt_mean is not None and rtt_mean > 0:
+                    rtt_var = profile.get("rtt_ms_variance") or 0.0
+                    if rtt_var > 0:
+                        # Convert Welford (mean, variance) to log-normal params
+                        # RTT is always positive and right-skewed → log-normal
+                        mu = math.log(rtt_mean**2 / math.sqrt(rtt_var + rtt_mean**2))
+                        sigma = math.sqrt(math.log(1 + rtt_var / rtt_mean**2))
+                        rtt_ms = max(0.1, math.exp(self.rng.gauss(mu, sigma)))
+                    else:
+                        rtt_ms = rtt_mean
+                    data_out["tcp_handshake_ms"] = round(rtt_ms, 3)
+
                 processing_time = 0.0
                 data_out_list = [data_out]
 
+                rtt_str = ""
+                if "tcp_handshake_ms" in data_out:
+                    rtt_str = f" rtt={data_out['tcp_handshake_ms']:.1f}ms"
                 print(
                     self.log_prefix(data_in["ID"])
                     + f"Bytes: orig={orig_bytes} resp={resp_bytes} "
                     + f"pkts={orig_pkts}/{resp_pkts}"
+                    + rtt_str
                 )
             else:
                 data_out_list = []
