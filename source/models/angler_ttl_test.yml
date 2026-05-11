@@ -1,0 +1,177 @@
+DEFAULT:
+  msg_size_key: bytes
+  seed: 42
+  sim_hours: 1
+  day_type: BIZ
+  base_epoch: 1736121600
+
+# --- Topology: NetworkSegment nodes model L3 hops ---
+# Chain: BytesSampler -> Seg_Router -> Seg_Switch -> SubnetAgg -> Sinks
+
+Seg_Router:
+  type: NetworkSegment
+  segment_type: router
+  subnet: "TTLTest"
+  hop_depth: 2
+  hop_latency_ms: 0.8
+  jitter_ms: 0.1
+  loss_rate: 0.02
+  Seg_Switch: ~
+
+Seg_Switch:
+  type: NetworkSegment
+  segment_type: switch
+  subnet: "TTLTest"
+  hop_depth: 1
+  hop_latency_ms: 0.01
+  jitter_ms: 0.002
+  loss_rate: 0.0
+  port_count: 24
+  uplink_ports: 2
+  capacity_bps: 1000000000
+  SubnetAgg_TTLTest: ~
+
+SubnetAgg_TTLTest:
+  type: SubnetAggregator
+  subnet_name: TTLTest
+  subnet_cidr: "10.0.5.0/24"
+  link_capacity_bps: 50000.0
+  bandwidth_profiles:
+    - day_type: BIZ
+      hour: 0
+      mean_bps: 40000.0
+      p95_bps: 80000.0
+      max_bps: 100000.0
+  ConnLogSink: ~
+  FlowSink: ~
+
+# --- Device 1: 10.0.5.10 (high traffic, TCP with RTT profiles) ---
+Gen_10_0_5_10:
+  type: TrafficGenerator
+  device_ip: "10.0.5.10"
+  subnet: TTLTest
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      interarrival_mean: 8.0
+      interarrival_variance: 16.0
+      duration_log_mean: 1.5
+      duration_log_variance: 0.5
+      flow_count_mean: 400.0
+      sample_count: 50
+  Dest_10_0_5_10: ~
+
+Dest_10_0_5_10:
+  type: WeightedDestSelector
+  device_ip: "10.0.5.10"
+  destinations:
+    BIZ_0:
+      - ip: "8.8.8.8"
+        port: 443
+        protocol: tcp
+        weight: 0.4
+        qos_class: EF
+      - ip: "13.107.42.14"
+        port: 443
+        protocol: tcp
+        weight: 0.3
+        qos_class: AF
+      - ip: "1.1.1.1"
+        port: 53
+        protocol: udp
+        weight: 0.3
+        qos_class: BE
+  Bytes_10_0_5_10: ~
+
+Bytes_10_0_5_10:
+  type: BytesSampler
+  device_ip: "10.0.5.10"
+  bytes_profiles:
+    "8.8.8.8":
+      bytes_log_mean: 7.5
+      bytes_log_variance: 1.2
+      packets_log_mean: 3.0
+      packets_log_variance: 0.6
+      response_ratio: 4.5
+      rtt_ms_mean: 25.0
+      rtt_ms_variance: 30.0
+    "13.107.42.14":
+      bytes_log_mean: 8.0
+      bytes_log_variance: 1.5
+      packets_log_mean: 4.0
+      packets_log_variance: 0.8
+      response_ratio: 3.0
+      rtt_ms_mean: 45.0
+      rtt_ms_variance: 100.0
+    "1.1.1.1":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+      rtt_ms_mean: 12.0
+      rtt_ms_variance: 8.0
+  Seg_Router: ~
+
+# --- Device 2: 10.0.5.20 (moderate traffic, tests segment fan-in) ---
+Gen_10_0_5_20:
+  type: TrafficGenerator
+  device_ip: "10.0.5.20"
+  subnet: TTLTest
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      interarrival_mean: 15.0
+      interarrival_variance: 50.0
+      duration_log_mean: 2.0
+      duration_log_variance: 0.8
+      flow_count_mean: 200.0
+      sample_count: 40
+  Dest_10_0_5_20: ~
+
+Dest_10_0_5_20:
+  type: WeightedDestSelector
+  device_ip: "10.0.5.20"
+  destinations:
+    BIZ_0:
+      - ip: "52.96.108.170"
+        port: 443
+        protocol: tcp
+        weight: 0.6
+        qos_class: AF
+      - ip: "1.1.1.1"
+        port: 53
+        protocol: udp
+        weight: 0.4
+        qos_class: BE
+  Bytes_10_0_5_20: ~
+
+Bytes_10_0_5_20:
+  type: BytesSampler
+  device_ip: "10.0.5.20"
+  bytes_profiles:
+    "52.96.108.170":
+      bytes_log_mean: 9.0
+      bytes_log_variance: 2.0
+      packets_log_mean: 5.0
+      packets_log_variance: 1.0
+      response_ratio: 6.0
+      rtt_ms_mean: 60.0
+      rtt_ms_variance: 200.0
+    "1.1.1.1":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+      rtt_ms_mean: 10.0
+      rtt_ms_variance: 5.0
+  Seg_Router: ~
+
+ConnLogSink:
+  type: ZeekConnLogSink
+  output_file: /tmp/angler_ttl_test/conn.log
+
+FlowSink:
+  type: FlowRecordSink
+  output_file: /tmp/angler_ttl_test/flow_records.csv
