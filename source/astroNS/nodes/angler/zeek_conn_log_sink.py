@@ -151,6 +151,13 @@ class ZeekConnLogSink(BaseNode):
                         tcp_hs_ms = tcp_hs_ms + qos_delay_ms
                     conn_entry["tcp_handshake_duration"] = round(tcp_hs_ms / 1000.0, 6)
 
+                # Include TTL when present (orig_ttl = observed after L3 hops)
+                ttl = data_in.get("ttl")
+                if ttl is not None and ttl > 0:
+                    conn_entry["orig_ttl"] = ttl
+                    # resp_ttl: simulate remote server's TTL (typically 64 for Linux)
+                    conn_entry["resp_ttl"] = 64
+
                 # Include QoS metadata when present
                 qos_class = data_in.get("qos_class")
                 if qos_class:

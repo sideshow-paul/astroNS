@@ -56,6 +56,9 @@ class TrafficGenerator(BaseNode):
         # Shift base_epoch so generated timestamps reflect the correct hour of day
         self.base_epoch += self.start_hour * 3600
 
+        # Initial TTL for this device's OS (64=Linux/macOS, 128=Windows, 255=network)
+        self.initial_ttl: int = int(configuration.get("initial_ttl", 64))
+
         self._start_node_active: Callable = self.setBoolFromConfig(
             "start_node_active", True
         )
@@ -197,6 +200,8 @@ class TrafficGenerator(BaseNode):
                 "flow_start": epoch_ts,
                 "duration": duration,
                 "flow_count": flow_count,
+                "initial_ttl": self.initial_ttl,
+                "ttl": self.initial_ttl,  # decremented by NetworkSegment L3 hops
             }
 
             print(

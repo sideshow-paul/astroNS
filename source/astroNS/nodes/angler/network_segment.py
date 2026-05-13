@@ -185,6 +185,12 @@ class NetworkSegment(BaseNode):
                     prev_hop_latency + latency_ms, 3
                 )
 
+                # L3 hops (routers) decrement TTL; L2 (switches) do not
+                if self.segment_type == "router":
+                    ttl = data_in.get("ttl", 0)
+                    if ttl > 0:
+                        data_out["ttl"] = ttl - 1
+
                 # Encode latency as processing_time (critical: NOT delay)
                 processing_time = latency_ms / 1000.0
                 data_out_list = [data_out]
