@@ -92,6 +92,10 @@ class NetworkSegment(BaseNode):
         self.total_dropped: int = 0
         self.total_delay_ms: float = 0.0
 
+        # Devices behind this segment (for targeted TTL decrement)
+        db = configuration.get("devices_behind") or []
+        self._devices_behind: set = set(db) if db else set()
+
         # Deterministic RNG for jitter and loss
         global_seed = int(configuration.get("seed", 42))
         self.rng = random.Random(f"{global_seed}_{name}")
@@ -185,11 +189,17 @@ class NetworkSegment(BaseNode):
                     prev_hop_latency + latency_ms, 3
                 )
 
-                # L3 hops (routers, gateways) decrement TTL; L2 (switches) do not
-                if self.segment_type in ("router", "gateway"):
-                    ttl = data_in.get("ttl", 0)
-                    if ttl > 0:
-                        data_out["ttl"] = ttl - 1
+                # Only TTL-inferred router segments decrement TTL.
+                # Gateway and core_router are structural aggregation nodes —
+                # their hops are NOT counted in the real TTL hop profiles.
+                # When devices_behind is set, only decrement for those devices
+                # (other devices pass through for latency but aren't at this hop depth).
+                if self.segment_type == "router":
+                    src_ip = data_in.get("src_ip", "")
+                    if not self._devices_behind or src_ip in self._devices_behind:
+                        ttl = data_in.get("ttl", 0)
+                        if ttl > 0:
+                            data_out["ttl"] = ttl - 1
 
                 # Encode latency as processing_time (critical: NOT delay)
                 processing_time = latency_ms / 1000.0
