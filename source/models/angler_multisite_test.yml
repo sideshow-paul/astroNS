@@ -52,6 +52,7 @@ Agg_HQ:
       max_bps: 1000000000
   ConnLogSink: ~
   FlowSink: ~
+  MatrixSink: ~
 
 # ── HQ Subnet 1: Engineering (200 devices, heavy HTTPS) ──
 
@@ -344,6 +345,7 @@ Agg_Branch:
       max_bps: 100000000
   ConnLogSink: ~
   FlowSink: ~
+  MatrixSink: ~
 
 # ── Branch Subnet 1: Development (75 devices, heavy traffic) ──
 
@@ -583,3 +585,14 @@ ConnLogSink:
 FlowSink:
   type: FlowRecordSink
   output_file: /tmp/angler_multisite_test/flow_records.csv
+
+MatrixSink:
+  type: TrafficMatrixSink
+  output_file: /tmp/angler_multisite_test/traffic_matrix.csv
+  subnet_cidrs:
+    Engineering_HQ: "10.1.1.0/24"
+    IoT_HQ: "10.1.2.0/24"
+    WiFi_HQ: "10.1.3.0/24"
+    Dev_Branch: "10.2.1.0/24"
+    Sales_Branch: "10.2.2.0/24"
+    Guest_Branch: "10.2.3.0/24"

@@ -50,6 +50,7 @@ SubnetAgg:
       max_bps: 200000.0
   ExternalSink: "dst_ip failed_reg '^10\\.'"
   InternalSink: "dst_ip starts_with 10."
+  MatrixSink: ~
 
 # Traffic generator with mixed internal/external destinations
 SubnetProfile:
@@ -116,3 +117,9 @@ ExternalSink:
 InternalSink:
   type: FlowRecordSink
   output_file: /tmp/angler_predicate_test/internal_flows.csv
+
+MatrixSink:
+  type: TrafficMatrixSink
+  output_file: /tmp/angler_predicate_test/traffic_matrix.csv
+  subnet_cidrs:
+    TestNet: "10.0.5.0/24"
