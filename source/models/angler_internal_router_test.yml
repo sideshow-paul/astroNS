@@ -1,0 +1,221 @@
+# Test: InternalRouter cross-subnet traffic routing
+#
+# Two subnets with cross-subnet destinations:
+#   SubnetA (10.1.1.0/24) — 5 devices, 20% traffic to SubnetB
+#   SubnetB (10.1.2.0/24) — 5 devices, 20% traffic to SubnetA
+#
+# SubnetTrafficProfile outputs use predicate routing:
+#   - dst_ip failed_reg → normal path (router → agg) for external traffic
+#   - dst_ip regex → InternalRouter for internal cross-subnet traffic
+#
+# InternalRouter uses starts_with predicates to route to correct aggregator.
+#
+# Expected: ~20% of each subnet's flows are cross-subnet (internal),
+#           ~80% go external.
+# TrafficMatrixSink verifies: SubnetA→SubnetB and SubnetB→SubnetA entries.
+
+DEFAULT:
+  msg_size_key: bytes
+  seed: 42
+  sim_hours: 1
+  day_type: BIZ
+  base_epoch: 1736121600
+
+# ═══════════════════════════════════════════════
+# Infrastructure
+# ═══════════════════════════════════════════════
+
+Router_A:
+  type: NetworkSegment
+  segment_type: router
+  subnet: "SubnetA"
+  hop_depth: 1
+  hop_latency_ms: 0.5
+  jitter_ms: 0.05
+  loss_rate: 0.0
+  Agg_A: ~
+
+Router_B:
+  type: NetworkSegment
+  segment_type: router
+  subnet: "SubnetB"
+  hop_depth: 1
+  hop_latency_ms: 0.5
+  jitter_ms: 0.05
+  loss_rate: 0.0
+  Agg_B: ~
+
+# InternalRouter — routes cross-subnet traffic by dst_ip prefix
+InternalRouter:
+  type: NetworkSegment
+  segment_type: core_router
+  hop_latency_ms: 0.3
+  jitter_ms: 0.03
+  loss_rate: 0.0
+  Agg_A: "dst_ip starts_with 10.1.1."
+  Agg_B: "dst_ip starts_with 10.1.2."
+
+Agg_A:
+  type: SubnetAggregator
+  subnet_name: SubnetA
+  subnet_cidr: "10.1.1.0/24"
+  link_capacity_bps: 1000000000
+  bandwidth_profiles:
+    - day_type: BIZ
+      hour: 0
+      mean_bps: 500000.0
+      p95_bps: 1000000.0
+      max_bps: 2000000.0
+  FlowSink: ~
+  MatrixSink: ~
+
+Agg_B:
+  type: SubnetAggregator
+  subnet_name: SubnetB
+  subnet_cidr: "10.1.2.0/24"
+  link_capacity_bps: 1000000000
+  bandwidth_profiles:
+    - day_type: BIZ
+      hour: 0
+      mean_bps: 500000.0
+      p95_bps: 1000000.0
+      max_bps: 2000000.0
+  FlowSink: ~
+  MatrixSink: ~
+
+# ═══════════════════════════════════════════════
+# SubnetA — 80% external, 20% to SubnetB (10.1.2.50)
+# ═══════════════════════════════════════════════
+
+Profile_A:
+  type: SubnetTrafficProfile
+  subnet_name: SubnetA
+  subnet_cidr: "10.1.1.0/24"
+  device_count: 5
+  initial_ttl: 64
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      aggregate_flow_rate: 0.5
+      duration_log_mean: 1.7
+      duration_log_variance: 0.6
+  destinations:
+    BIZ_0:
+      - ip: "8.8.8.8"
+        port: 443
+        protocol: tcp
+        weight: 0.40
+        qos_class: AF
+      - ip: "1.1.1.1"
+        port: 53
+        protocol: udp
+        weight: 0.40
+        qos_class: BE
+      - ip: "10.1.2.50"
+        port: 445
+        protocol: tcp
+        weight: 0.20
+        qos_class: AF
+  bytes_profiles:
+    "8.8.8.8":
+      bytes_log_mean: 7.5
+      bytes_log_variance: 1.2
+      packets_log_mean: 3.0
+      packets_log_variance: 0.6
+      response_ratio: 4.5
+      rtt_ms_mean: 25.0
+      rtt_ms_variance: 30.0
+    "1.1.1.1":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+      rtt_ms_mean: 11.0
+      rtt_ms_variance: 6.0
+    "10.1.2.50":
+      bytes_log_mean: 6.0
+      bytes_log_variance: 0.8
+      packets_log_mean: 2.0
+      packets_log_variance: 0.4
+      response_ratio: 2.0
+      rtt_ms_mean: 1.0
+      rtt_ms_variance: 0.5
+  Router_A: "dst_ip failed_reg '^(10\\.1\\.1|10\\.1\\.2)\\.'"
+  InternalRouter: "dst_ip regex '^(10\\.1\\.1|10\\.1\\.2)\\.'"
+
+# ═══════════════════════════════════════════════
+# SubnetB — 80% external, 20% to SubnetA (10.1.1.10)
+# ═══════════════════════════════════════════════
+
+Profile_B:
+  type: SubnetTrafficProfile
+  subnet_name: SubnetB
+  subnet_cidr: "10.1.2.0/24"
+  device_count: 5
+  initial_ttl: 128
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      aggregate_flow_rate: 0.5
+      duration_log_mean: 1.7
+      duration_log_variance: 0.6
+  destinations:
+    BIZ_0:
+      - ip: "8.8.8.8"
+        port: 443
+        protocol: tcp
+        weight: 0.40
+        qos_class: AF
+      - ip: "1.1.1.1"
+        port: 53
+        protocol: udp
+        weight: 0.40
+        qos_class: BE
+      - ip: "10.1.1.10"
+        port: 80
+        protocol: tcp
+        weight: 0.20
+        qos_class: AF
+  bytes_profiles:
+    "8.8.8.8":
+      bytes_log_mean: 7.5
+      bytes_log_variance: 1.2
+      packets_log_mean: 3.0
+      packets_log_variance: 0.6
+      response_ratio: 4.5
+      rtt_ms_mean: 25.0
+      rtt_ms_variance: 30.0
+    "1.1.1.1":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+      rtt_ms_mean: 11.0
+      rtt_ms_variance: 6.0
+    "10.1.1.10":
+      bytes_log_mean: 6.0
+      bytes_log_variance: 0.8
+      packets_log_mean: 2.0
+      packets_log_variance: 0.4
+      response_ratio: 2.0
+      rtt_ms_mean: 1.0
+      rtt_ms_variance: 0.5
+  Router_B: "dst_ip failed_reg '^(10\\.1\\.1|10\\.1\\.2)\\.'"
+  InternalRouter: "dst_ip regex '^(10\\.1\\.1|10\\.1\\.2)\\.'"
+
+# ═══════════════════════════════════════════════
+# Output sinks
+# ═══════════════════════════════════════════════
+
+FlowSink:
+  type: FlowRecordSink
+  output_file: /tmp/angler_internal_router_test/flows.csv
+
+MatrixSink:
+  type: TrafficMatrixSink
+  output_file: /tmp/angler_internal_router_test/traffic_matrix.csv
+  subnet_cidrs:
+    SubnetA: "10.1.1.0/24"
+    SubnetB: "10.1.2.0/24"
