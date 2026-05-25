@@ -1,0 +1,135 @@
+# Test model: SubnetTrafficProfile replaces per-device chains
+#
+# Equivalent to angler_ttl_test.yml but uses a single SubnetTrafficProfile
+# node instead of 2x (TrafficGenerator + WeightedDestSelector + BytesSampler).
+# The aggregate flow rate is the sum of per-device rates:
+#   Device 10.0.5.10: ~1/8 = 0.125 flows/sec
+#   Device 10.0.5.20: ~1/15 = 0.067 flows/sec
+#   Aggregate: ~0.192 flows/sec
+
+DEFAULT:
+  msg_size_key: bytes
+  seed: 42
+  sim_hours: 1
+  day_type: BIZ
+  base_epoch: 1736121600
+
+# --- Topology: same as TTL test ---
+
+Seg_Router:
+  type: NetworkSegment
+  segment_type: router
+  subnet: "TTLTest"
+  hop_depth: 2
+  hop_latency_ms: 0.8
+  jitter_ms: 0.1
+  loss_rate: 0.02
+  Seg_Switch: ~
+
+Seg_Switch:
+  type: NetworkSegment
+  segment_type: switch
+  subnet: "TTLTest"
+  hop_depth: 1
+  hop_latency_ms: 0.01
+  jitter_ms: 0.002
+  loss_rate: 0.0
+  port_count: 24
+  uplink_ports: 2
+  capacity_bps: 1000000000
+  SubnetAgg_TTLTest: ~
+
+SubnetAgg_TTLTest:
+  type: SubnetAggregator
+  subnet_name: TTLTest
+  subnet_cidr: "10.0.5.0/24"
+  link_capacity_bps: 50000.0
+  bandwidth_profiles:
+    - day_type: BIZ
+      hour: 0
+      mean_bps: 40000.0
+      p95_bps: 80000.0
+      max_bps: 100000.0
+  ConnLogSink: ~
+  FlowSink: ~
+
+# --- Single SubnetTrafficProfile replaces 6 per-device nodes ---
+
+SubnetProfile_TTLTest:
+  type: SubnetTrafficProfile
+  subnet_name: TTLTest
+  subnet_cidr: "10.0.5.0/24"
+  device_count: 2
+  initial_ttl: 64
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      # Sum of per-device flow rates: 1/8 + 1/15 = 0.192 flows/sec
+      aggregate_flow_rate: 0.192
+      duration_log_mean: 1.7
+      duration_log_variance: 0.6
+  destinations:
+    BIZ_0:
+      # Merged from both devices, weights re-normalized
+      - ip: "8.8.8.8"
+        port: 443
+        protocol: tcp
+        weight: 0.20
+        qos_class: EF
+      - ip: "13.107.42.14"
+        port: 443
+        protocol: tcp
+        weight: 0.15
+        qos_class: AF
+      - ip: "52.96.108.170"
+        port: 443
+        protocol: tcp
+        weight: 0.30
+        qos_class: AF
+      - ip: "1.1.1.1"
+        port: 53
+        protocol: udp
+        weight: 0.35
+        qos_class: BE
+  bytes_profiles:
+    "8.8.8.8":
+      bytes_log_mean: 7.5
+      bytes_log_variance: 1.2
+      packets_log_mean: 3.0
+      packets_log_variance: 0.6
+      response_ratio: 4.5
+      rtt_ms_mean: 25.0
+      rtt_ms_variance: 30.0
+    "13.107.42.14":
+      bytes_log_mean: 8.0
+      bytes_log_variance: 1.5
+      packets_log_mean: 4.0
+      packets_log_variance: 0.8
+      response_ratio: 3.0
+      rtt_ms_mean: 45.0
+      rtt_ms_variance: 100.0
+    "52.96.108.170":
+      bytes_log_mean: 9.0
+      bytes_log_variance: 2.0
+      packets_log_mean: 5.0
+      packets_log_variance: 1.0
+      response_ratio: 6.0
+      rtt_ms_mean: 60.0
+      rtt_ms_variance: 200.0
+    "1.1.1.1":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+      rtt_ms_mean: 11.0
+      rtt_ms_variance: 6.0
+  Seg_Router: ~
+
+ConnLogSink:
+  type: ZeekConnLogSink
+  output_file: /tmp/angler_subnet_profile_test/conn.log
+
+FlowSink:
+  type: FlowRecordSink
+  output_file: /tmp/angler_subnet_profile_test/flow_records.csv

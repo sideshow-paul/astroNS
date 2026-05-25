@@ -1,0 +1,585 @@
+# Two-site network with 3 subnets per site using SubnetTrafficProfile
+#
+# Site HQ (10.1.x.0/24): Engineering, IoT, WiFi
+# Site Branch (10.2.x.0/24): Development, Sales, Guest
+#
+# Each site has: 3 SubnetProfiles → Switch → Router → Aggregator → Sinks
+
+DEFAULT:
+  msg_size_key: bytes
+  seed: 42
+  sim_hours: 1
+  day_type: BIZ
+  base_epoch: 1736121600
+
+# ═══════════════════════════════════════════════
+# SITE HQ — Infrastructure
+# ═══════════════════════════════════════════════
+
+Router_HQ:
+  type: NetworkSegment
+  segment_type: router
+  subnet: "HQ"
+  hop_depth: 2
+  hop_latency_ms: 0.6
+  jitter_ms: 0.08
+  loss_rate: 0.01
+  Agg_HQ: ~
+
+Switch_HQ:
+  type: NetworkSegment
+  segment_type: switch
+  subnet: "HQ"
+  hop_depth: 1
+  hop_latency_ms: 0.01
+  jitter_ms: 0.002
+  loss_rate: 0.0
+  port_count: 48
+  uplink_ports: 4
+  capacity_bps: 10000000000
+  Router_HQ: ~
+
+Agg_HQ:
+  type: SubnetAggregator
+  subnet_name: HQ
+  subnet_cidr: "10.1.0.0/16"
+  link_capacity_bps: 1000000000
+  bandwidth_profiles:
+    - day_type: BIZ
+      hour: 0
+      mean_bps: 500000000
+      p95_bps: 800000000
+      max_bps: 1000000000
+  ConnLogSink: ~
+  FlowSink: ~
+
+# ── HQ Subnet 1: Engineering (200 devices, heavy HTTPS) ──
+
+Profile_Eng_HQ:
+  type: SubnetTrafficProfile
+  subnet_name: Engineering_HQ
+  subnet_cidr: "10.1.1.0/24"
+  device_count: 200
+  initial_ttl: 64
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      aggregate_flow_rate: 8.5
+      duration_log_mean: 2.1
+      duration_log_variance: 1.2
+  destinations:
+    BIZ_0:
+      - ip: "142.250.80.46"
+        port: 443
+        protocol: tcp
+        weight: 0.25
+        qos_class: AF
+      - ip: "52.84.12.99"
+        port: 443
+        protocol: tcp
+        weight: 0.20
+        qos_class: AF
+      - ip: "13.107.42.14"
+        port: 443
+        protocol: tcp
+        weight: 0.18
+        qos_class: AF
+      - ip: "185.199.108.153"
+        port: 443
+        protocol: tcp
+        weight: 0.15
+        qos_class: BE
+      - ip: "8.8.8.8"
+        port: 53
+        protocol: udp
+        weight: 0.12
+        qos_class: BE
+      - ip: "1.1.1.1"
+        port: 53
+        protocol: udp
+        weight: 0.10
+        qos_class: BE
+  bytes_profiles:
+    "142.250.80.46":
+      bytes_log_mean: 8.2
+      bytes_log_variance: 1.8
+      packets_log_mean: 4.0
+      packets_log_variance: 0.9
+      response_ratio: 4.0
+      rtt_ms_mean: 15.0
+      rtt_ms_variance: 10.0
+    "52.84.12.99":
+      bytes_log_mean: 9.5
+      bytes_log_variance: 2.5
+      packets_log_mean: 5.0
+      packets_log_variance: 1.2
+      response_ratio: 8.0
+      rtt_ms_mean: 22.0
+      rtt_ms_variance: 20.0
+    "13.107.42.14":
+      bytes_log_mean: 7.8
+      bytes_log_variance: 1.5
+      packets_log_mean: 3.5
+      packets_log_variance: 0.7
+      response_ratio: 3.0
+      rtt_ms_mean: 35.0
+      rtt_ms_variance: 50.0
+    "185.199.108.153":
+      bytes_log_mean: 7.0
+      bytes_log_variance: 1.2
+      packets_log_mean: 3.0
+      packets_log_variance: 0.5
+      response_ratio: 2.0
+    "8.8.8.8":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+      rtt_ms_mean: 12.0
+      rtt_ms_variance: 5.0
+    "1.1.1.1":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+      rtt_ms_mean: 10.0
+      rtt_ms_variance: 4.0
+  Switch_HQ: ~
+
+# ── HQ Subnet 2: IoT (50 devices, low rate, mostly UDP) ──
+
+Profile_IoT_HQ:
+  type: SubnetTrafficProfile
+  subnet_name: IoT_HQ
+  subnet_cidr: "10.1.2.0/24"
+  device_count: 50
+  initial_ttl: 255
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      aggregate_flow_rate: 0.8
+      duration_log_mean: 0.5
+      duration_log_variance: 0.3
+  destinations:
+    BIZ_0:
+      - ip: "34.120.54.55"
+        port: 8883
+        protocol: tcp
+        weight: 0.45
+        qos_class: AF
+      - ip: "52.14.87.23"
+        port: 1883
+        protocol: tcp
+        weight: 0.30
+        qos_class: BE
+      - ip: "8.8.8.8"
+        port: 53
+        protocol: udp
+        weight: 0.15
+        qos_class: BE
+      - ip: "239.255.255.250"
+        port: 1900
+        protocol: udp
+        weight: 0.10
+        qos_class: BE
+  bytes_profiles:
+    "34.120.54.55":
+      bytes_log_mean: 5.0
+      bytes_log_variance: 0.8
+      packets_log_mean: 2.0
+      packets_log_variance: 0.4
+      response_ratio: 1.5
+      rtt_ms_mean: 40.0
+      rtt_ms_variance: 80.0
+    "52.14.87.23":
+      bytes_log_mean: 4.5
+      bytes_log_variance: 0.6
+      packets_log_mean: 1.8
+      packets_log_variance: 0.3
+      response_ratio: 1.0
+      rtt_ms_mean: 55.0
+      rtt_ms_variance: 120.0
+    "8.8.8.8":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+    "239.255.255.250":
+      bytes_log_mean: 6.0
+      bytes_log_variance: 0.3
+      packets_log_mean: 1.2
+      packets_log_variance: 0.2
+      response_ratio: 0.0
+  Switch_HQ: ~
+
+# ── HQ Subnet 3: WiFi (100 devices, mixed traffic) ──
+
+Profile_WiFi_HQ:
+  type: SubnetTrafficProfile
+  subnet_name: WiFi_HQ
+  subnet_cidr: "10.1.3.0/24"
+  device_count: 100
+  initial_ttl: 128
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      aggregate_flow_rate: 4.2
+      duration_log_mean: 1.8
+      duration_log_variance: 1.5
+  destinations:
+    BIZ_0:
+      - ip: "142.250.80.46"
+        port: 443
+        protocol: tcp
+        weight: 0.30
+        qos_class: AF
+      - ip: "31.13.65.36"
+        port: 443
+        protocol: tcp
+        weight: 0.20
+        qos_class: BE
+      - ip: "151.101.1.69"
+        port: 443
+        protocol: tcp
+        weight: 0.15
+        qos_class: BE
+      - ip: "104.16.99.52"
+        port: 443
+        protocol: tcp
+        weight: 0.15
+        qos_class: BE
+      - ip: "8.8.8.8"
+        port: 53
+        protocol: udp
+        weight: 0.10
+        qos_class: BE
+      - ip: "1.1.1.1"
+        port: 53
+        protocol: udp
+        weight: 0.10
+        qos_class: BE
+  bytes_profiles:
+    "142.250.80.46":
+      bytes_log_mean: 9.0
+      bytes_log_variance: 2.5
+      packets_log_mean: 4.5
+      packets_log_variance: 1.0
+      response_ratio: 6.0
+      rtt_ms_mean: 18.0
+      rtt_ms_variance: 12.0
+    "31.13.65.36":
+      bytes_log_mean: 10.0
+      bytes_log_variance: 3.0
+      packets_log_mean: 5.5
+      packets_log_variance: 1.5
+      response_ratio: 10.0
+      rtt_ms_mean: 25.0
+      rtt_ms_variance: 30.0
+    "151.101.1.69":
+      bytes_log_mean: 8.5
+      bytes_log_variance: 2.0
+      packets_log_mean: 4.0
+      packets_log_variance: 0.8
+      response_ratio: 5.0
+    "104.16.99.52":
+      bytes_log_mean: 8.0
+      bytes_log_variance: 1.8
+      packets_log_mean: 3.8
+      packets_log_variance: 0.7
+      response_ratio: 4.0
+    "8.8.8.8":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+    "1.1.1.1":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+  Switch_HQ: ~
+
+# ═══════════════════════════════════════════════
+# SITE BRANCH — Infrastructure
+# ═══════════════════════════════════════════════
+
+Router_Branch:
+  type: NetworkSegment
+  segment_type: router
+  subnet: "Branch"
+  hop_depth: 2
+  hop_latency_ms: 1.2
+  jitter_ms: 0.15
+  loss_rate: 0.02
+  Agg_Branch: ~
+
+Switch_Branch:
+  type: NetworkSegment
+  segment_type: switch
+  subnet: "Branch"
+  hop_depth: 1
+  hop_latency_ms: 0.01
+  jitter_ms: 0.002
+  loss_rate: 0.0
+  port_count: 24
+  uplink_ports: 2
+  capacity_bps: 1000000000
+  Router_Branch: ~
+
+Agg_Branch:
+  type: SubnetAggregator
+  subnet_name: Branch
+  subnet_cidr: "10.2.0.0/16"
+  link_capacity_bps: 100000000
+  bandwidth_profiles:
+    - day_type: BIZ
+      hour: 0
+      mean_bps: 60000000
+      p95_bps: 85000000
+      max_bps: 100000000
+  ConnLogSink: ~
+  FlowSink: ~
+
+# ── Branch Subnet 1: Development (75 devices, heavy traffic) ──
+
+Profile_Dev_Branch:
+  type: SubnetTrafficProfile
+  subnet_name: Dev_Branch
+  subnet_cidr: "10.2.1.0/24"
+  device_count: 75
+  initial_ttl: 64
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      aggregate_flow_rate: 3.8
+      duration_log_mean: 2.3
+      duration_log_variance: 1.4
+  destinations:
+    BIZ_0:
+      - ip: "185.199.108.153"
+        port: 443
+        protocol: tcp
+        weight: 0.35
+        qos_class: AF
+      - ip: "140.82.121.3"
+        port: 22
+        protocol: tcp
+        weight: 0.20
+        qos_class: EF
+      - ip: "52.84.12.99"
+        port: 443
+        protocol: tcp
+        weight: 0.15
+        qos_class: AF
+      - ip: "104.18.32.7"
+        port: 443
+        protocol: tcp
+        weight: 0.15
+        qos_class: BE
+      - ip: "8.8.8.8"
+        port: 53
+        protocol: udp
+        weight: 0.15
+        qos_class: BE
+  bytes_profiles:
+    "185.199.108.153":
+      bytes_log_mean: 8.5
+      bytes_log_variance: 2.0
+      packets_log_mean: 4.2
+      packets_log_variance: 1.0
+      response_ratio: 5.0
+      rtt_ms_mean: 45.0
+      rtt_ms_variance: 80.0
+    "140.82.121.3":
+      bytes_log_mean: 6.0
+      bytes_log_variance: 1.5
+      packets_log_mean: 3.0
+      packets_log_variance: 0.6
+      response_ratio: 2.0
+      rtt_ms_mean: 50.0
+      rtt_ms_variance: 100.0
+    "52.84.12.99":
+      bytes_log_mean: 9.0
+      bytes_log_variance: 2.2
+      packets_log_mean: 4.8
+      packets_log_variance: 1.1
+      response_ratio: 7.0
+      rtt_ms_mean: 55.0
+      rtt_ms_variance: 120.0
+    "104.18.32.7":
+      bytes_log_mean: 7.5
+      bytes_log_variance: 1.5
+      packets_log_mean: 3.5
+      packets_log_variance: 0.7
+      response_ratio: 3.0
+    "8.8.8.8":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+  Switch_Branch: ~
+
+# ── Branch Subnet 2: Sales (30 devices, moderate traffic) ──
+
+Profile_Sales_Branch:
+  type: SubnetTrafficProfile
+  subnet_name: Sales_Branch
+  subnet_cidr: "10.2.2.0/24"
+  device_count: 30
+  initial_ttl: 128
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      aggregate_flow_rate: 1.5
+      duration_log_mean: 1.5
+      duration_log_variance: 0.8
+  destinations:
+    BIZ_0:
+      - ip: "13.107.42.14"
+        port: 443
+        protocol: tcp
+        weight: 0.40
+        qos_class: AF
+      - ip: "52.96.108.170"
+        port: 443
+        protocol: tcp
+        weight: 0.30
+        qos_class: AF
+      - ip: "142.250.80.46"
+        port: 443
+        protocol: tcp
+        weight: 0.15
+        qos_class: BE
+      - ip: "8.8.8.8"
+        port: 53
+        protocol: udp
+        weight: 0.15
+        qos_class: BE
+  bytes_profiles:
+    "13.107.42.14":
+      bytes_log_mean: 8.0
+      bytes_log_variance: 1.8
+      packets_log_mean: 3.8
+      packets_log_variance: 0.8
+      response_ratio: 4.0
+      rtt_ms_mean: 40.0
+      rtt_ms_variance: 60.0
+    "52.96.108.170":
+      bytes_log_mean: 7.5
+      bytes_log_variance: 1.5
+      packets_log_mean: 3.5
+      packets_log_variance: 0.7
+      response_ratio: 3.5
+      rtt_ms_mean: 38.0
+      rtt_ms_variance: 50.0
+    "142.250.80.46":
+      bytes_log_mean: 8.5
+      bytes_log_variance: 2.0
+      packets_log_mean: 4.0
+      packets_log_variance: 0.9
+      response_ratio: 5.0
+    "8.8.8.8":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+  Switch_Branch: ~
+
+# ── Branch Subnet 3: Guest (150 devices, heavy streaming) ──
+
+Profile_Guest_Branch:
+  type: SubnetTrafficProfile
+  subnet_name: Guest_Branch
+  subnet_cidr: "10.2.3.0/24"
+  device_count: 150
+  initial_ttl: 64
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      aggregate_flow_rate: 6.0
+      duration_log_mean: 3.0
+      duration_log_variance: 2.0
+  destinations:
+    BIZ_0:
+      - ip: "23.246.20.72"
+        port: 443
+        protocol: tcp
+        weight: 0.30
+        qos_class: BE
+      - ip: "142.250.80.46"
+        port: 443
+        protocol: tcp
+        weight: 0.25
+        qos_class: BE
+      - ip: "31.13.65.36"
+        port: 443
+        protocol: tcp
+        weight: 0.20
+        qos_class: BE
+      - ip: "104.16.99.52"
+        port: 443
+        protocol: tcp
+        weight: 0.15
+        qos_class: BE
+      - ip: "8.8.8.8"
+        port: 53
+        protocol: udp
+        weight: 0.10
+        qos_class: BE
+  bytes_profiles:
+    "23.246.20.72":
+      bytes_log_mean: 11.0
+      bytes_log_variance: 2.0
+      packets_log_mean: 6.0
+      packets_log_variance: 1.0
+      response_ratio: 15.0
+      rtt_ms_mean: 30.0
+      rtt_ms_variance: 40.0
+    "142.250.80.46":
+      bytes_log_mean: 10.5
+      bytes_log_variance: 2.5
+      packets_log_mean: 5.5
+      packets_log_variance: 1.2
+      response_ratio: 12.0
+      rtt_ms_mean: 20.0
+      rtt_ms_variance: 15.0
+    "31.13.65.36":
+      bytes_log_mean: 10.0
+      bytes_log_variance: 3.0
+      packets_log_mean: 5.0
+      packets_log_variance: 1.5
+      response_ratio: 10.0
+      rtt_ms_mean: 25.0
+      rtt_ms_variance: 30.0
+    "104.16.99.52":
+      bytes_log_mean: 9.0
+      bytes_log_variance: 2.0
+      packets_log_mean: 4.5
+      packets_log_variance: 0.9
+      response_ratio: 6.0
+    "8.8.8.8":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+  Switch_Branch: ~
+
+# ═══════════════════════════════════════════════
+# SHARED SINKS
+# ═══════════════════════════════════════════════
+
+ConnLogSink:
+  type: ZeekConnLogSink
+  output_file: /tmp/angler_multisite_test/conn.log
+
+FlowSink:
+  type: FlowRecordSink
+  output_file: /tmp/angler_multisite_test/flow_records.csv

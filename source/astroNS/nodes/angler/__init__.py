@@ -11,3 +11,4 @@ from .network_segment import NetworkSegment
 from .subnet_aggregator import SubnetAggregator
 from .zeek_conn_log_sink import ZeekConnLogSink
 from .flow_record_sink import FlowRecordSink
+from .subnet_traffic_profile import SubnetTrafficProfile
