@@ -20,6 +20,7 @@ import datetime
 import platform
 
 from links import *
+from nodes.core.streaming_stats import StreamingStats
 
 from simpy.util import start_delayed
 
@@ -224,13 +225,21 @@ class BaseNode:
             BaseNode.nodes[name] = self
             BaseNode.node_list.append(self)
 
+        # Streaming statistics — O(1) memory per metric
+        self.stats_wait = StreamingStats()
+        self.stats_processing = StreamingStats()
+        self.stats_delay = StreamingStats()
+        self.stats_data_size = StreamingStats()
+        self.msgs_processed: int = 0
+
+        # Legacy list accumulators — only populated when lean_mode is False
+        # and trace_mode is True (for backward compat with create_history_dataframe)
         self.msg_ids: List[str] = []
         self.wait_times: List[float] = []
         self.delay_till_next_msg: List[float] = []
         self.processing_times: List[float] = []
         self.data_sizes: List[float] = []
         self.time_received: List[float] = []
-        self.msgs_processed: float = 0
 
         self.env = env
         self._name = name
@@ -432,6 +441,27 @@ class BaseNode:
         )
         return df
 
+    def get_stats(self) -> Dict[str, Any]:
+        """
+        Return streaming statistics for this node (O(1) memory, always available).
+
+        Unlike create_history_dataframe() which requires lean_mode=False and
+        stores every observation, get_stats() uses Welford accumulators and
+        P-squared quantile estimators that are updated on every message
+        regardless of lean_mode.
+
+        Returns a dict with keys: wait_time, processing_time, delay,
+        data_size (each a dict with count/mean/std/min/max/sum/p25/p75/p90),
+        plus msgs_processed.
+        """
+        return {
+            "wait_time": self.stats_wait.to_dict(),
+            "processing_time": self.stats_processing.to_dict(),
+            "delay": self.stats_delay.to_dict(),
+            "data_size": self.stats_data_size.to_dict(),
+            "msgs_processed": self.msgs_processed,
+        }
+
     # pipe methods
     def set_output_conn(self, pipe_conn: NodePipe) -> None:
         """
@@ -568,9 +598,6 @@ class BaseNode:
                             # stop the sim
                             return
 
-                    # If a node doesn't have an in pipe, then it generates data only
-                    yield self.env.timeout(delay_till_get_next_msg)
-
                 # If a node doesn't have an in pipe, then it generates data only
                 elif self.out_pipe_conns:
                     (
@@ -672,16 +699,21 @@ class BaseNode:
         # This node has processed an additional message
         self.msgs_processed += 1
 
+        # Streaming stats — always updated (O(1) memory)
+        wait_time = self.env.now - time_sent
+        self.stats_wait.update(wait_time)
+        self.stats_processing.update(processing_time)
+        self.stats_delay.update(delay_till_next_msg)
+        self.stats_data_size.update(data_in_size)
+
         if BaseNode.lean_mode:
             return
 
-        # Add the message ID to the list
-        self.msg_ids.append(data_in_id)  # data_in["ID"])
-        # List the time received
+        # Legacy list accumulators — for backward compat with create_history_dataframe
+        self.msg_ids.append(data_in_id)
         self.time_received.append(time_sent)
-        # Delta between simulation now and the time sent.
-        self.wait_times.append(self.env.now - time_sent)
-        self.data_sizes.append(data_in_size)  # data_in[self.msg_size_key])
+        self.wait_times.append(wait_time)
+        self.data_sizes.append(data_in_size)
         self.delay_till_next_msg.append(delay_till_next_msg)
         self.processing_times.append(processing_time)
         if self.meta_node:
