@@ -25,8 +25,9 @@ def output_loaded_config(nodes, file_stream, env):
 
 
 def output_node_overall_stats(nodes, file_stream):
-    """Output node stats to file, doesn't seem to be used right now. This will
-    process overall stats rather than just individual nodes.
+    """Output overall stats summary across all nodes.
+
+    Uses StreamingStats (get_stats()) — works in lean_mode with O(1) memory.
 
     Args:
         nodes (list): The list of all node classes
@@ -35,61 +36,38 @@ def output_node_overall_stats(nodes, file_stream):
     Returns:
         None
     """
+    index = []
+    rows = []
+    for node in nodes:
+        stats = node.get_stats()
+        ds = stats["data_size"]
+        wt = stats["wait_time"]
+        pt = stats["processing_time"]
+        index.append(node.name)
+        rows.append({
+            "sum_size": ds["sum"],
+            "mean_size": ds["mean"],
+            "std_size": ds["std"],
+            "sum_wait_time": wt["sum"],
+            "mean_wait_time": wt["mean"],
+            "std_wait_time": wt["std"],
+            "sum_processing_time": pt["sum"],
+            "mean_processing_time": pt["mean"],
+            "std_processing_time": pt["std"],
+        })
 
+    total_df = pd.DataFrame(rows, index=index)
     pd.set_option("expand_frame_repr", False)
     pd.set_option("display.max_rows", 9999)
-    pd.set_option("display.max_colwidth", 100)
-
-    index = [node.name for node in nodes]
-
-    filtered_list = [node.create_history_dataframe() for node in nodes]
-
-    data_size_sum_list = []
-    data_size_mean_list = []
-    data_size_std_list = []
-
-    wait_time_sum_list = []
-    wait_time_mean_list = []
-    wait_time_std_list = []
-
-    processing_time_sum_list = []
-    processing_time_mean_list = []
-    processing_time_std_list = []
-
-    for df in filtered_list:
-        data_size_sum_list.append(df["data_size"].sum())
-        data_size_mean_list.append(df["data_size"].mean())
-        data_size_std_list.append(df["data_size"].std())
-
-        wait_time_sum_list.append(df["msg_wait_time"].sum())
-        wait_time_mean_list.append(df["msg_wait_time"].mean())
-        wait_time_std_list.append(df["msg_wait_time"].std())
-
-        processing_time_sum_list.append(df["processing_time"].sum())
-        processing_time_mean_list.append(df["processing_time"].mean())
-        processing_time_std_list.append(df["processing_time"].std())
-
-    total_df = pd.DataFrame(
-        {
-            "sum_size": data_size_sum_list,
-            "mean_size": data_size_mean_list,
-            "std_size": data_size_std_list,
-            "sum_wait_time": wait_time_sum_list,
-            "mean_wait_time": wait_time_mean_list,
-            "std_wait_time": wait_time_std_list,
-            "sum_processing_time": processing_time_sum_list,
-            "mean_processing_time": processing_time_mean_list,
-            "std_processing_time": processing_time_std_list,
-        },
-        index=index,
-    )
     file_stream.write(str(total_df))
-
-    sum_data_plot_data = pd.DataFrame({"sum_size": data_size_sum_list}, index=index)
 
 
 def output_node_stats(nodes, file_stream, write_history=False):
     """Output individual node stats.
+
+    Uses StreamingStats (get_stats()) for summary statistics — works in both
+    lean_mode and normal mode with O(1) memory. The write_history option
+    still requires lean_mode=False (legacy list accumulators).
 
     Args:
         nodes (list): The list of all node classes
@@ -99,30 +77,34 @@ def output_node_stats(nodes, file_stream, write_history=False):
     Returns:
         None
     """
-    filtered_list = [node for node in nodes]
-    for node in filtered_list:
-        df = node.create_history_dataframe()
-        # history_string = str(df)
-        stats_df = pd.concat(
-            [
-                df.describe(),
-                df.agg(
-                    {
-                        "data_size": "sum",
-                        "delay_till_next_msg": ["sum"],
-                        "msg_wait_time": "sum",
-                        "processing_time": "sum",
-                    }
-                ),
-            ],
-            sort=True,
-        )
+    for node in nodes:
+        stats = node.get_stats()
         file_stream.write("\n\nNode: {}".format(node.name))
-        file_stream.write("\n" + str(stats_df))
+        file_stream.write("\n  Messages processed: {}".format(stats["msgs_processed"]))
+
+        for metric_name, metric_key in [
+            ("Wait Time", "wait_time"),
+            ("Processing Time", "processing_time"),
+            ("Delay", "delay"),
+            ("Data Size", "data_size"),
+        ]:
+            s = stats[metric_key]
+            file_stream.write("\n  {}:".format(metric_name))
+            file_stream.write(
+                "\n    count={count}  mean={mean:.6f}  std={std:.6f}"
+                "  min={min:.6f}  max={max:.6f}  sum={sum:.6f}".format(**s)
+            )
+            file_stream.write(
+                "\n    p25={p25:.6f}  p75={p75:.6f}  p90={p90:.6f}".format(**s)
+            )
+
         if write_history:
-            history_string = str(df)
-            file_stream.write("\nNode History")
-            file_stream.write("\n" + history_string)
+            try:
+                df = node.create_history_dataframe()
+                file_stream.write("\nNode History")
+                file_stream.write("\n" + str(df))
+            except Exception:
+                file_stream.write("\n  (history not available — lean_mode enabled?)")
 
 
 def output_msg_history(msg_history, file_stream):
@@ -247,6 +229,8 @@ def loaded_config_to_json(nodes, file_stream):
 def output_node_stats_json(nodes, file_stream):
     """Json output version of :func:`output_node_stats`
 
+    Uses StreamingStats (get_stats()) — works in lean_mode with O(1) memory.
+
     Args:
         nodes (list): The list of all node classes
         file_stream: Place all file output in this stream.
@@ -254,28 +238,13 @@ def output_node_stats_json(nodes, file_stream):
     Returns:
         None
     """
-    for node in nodes:
-        df = node.create_history_dataframe()
-        stats_df = pd.concat(
-            [
-                df.describe(),
-                df.agg(
-                    {
-                        "data_size": sum,
-                        "delay_till_next_msg": ["sum"],
-                        "msg_wait_time": sum,
-                        "processing_time": sum,
-                    }
-                ),
-            ]
-        )
-        history_string = df.to_json()  # str(df)
-        stats_string = stats_df.describe().to_json()
+    import json
 
-        file_stream.write('{} "{}:"'.format("{", node.name))
-        file_stream.write("\n" + stats_string)
-        file_stream.write("\nNode History")
-        file_stream.write("\n" + history_string)
+    results = {}
+    for node in nodes:
+        results[node.name] = node.get_stats()
+
+    file_stream.write(json.dumps(results, indent=2))
 
 
 def output_msg_history_json(msg_history, file_stream):
