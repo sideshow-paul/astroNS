@@ -1,0 +1,118 @@
+# Test: predicate routing splits internal vs external traffic
+#
+# SubnetTrafficProfile generates flows to both external IPs and an
+# internal IP (10.0.5.99). The BytesSampler-equivalent output from
+# SubnetProfile goes to Seg_Router. We add a second path using
+# predicate routing on dst_ip to verify astroNS predicates work
+# with Angler flow messages.
+#
+# Expected: ~35% of flows go to 10.0.5.99 (internal), ~65% external.
+# Two separate sinks count the split.
+
+DEFAULT:
+  msg_size_key: bytes
+  seed: 42
+  sim_hours: 1
+  day_type: BIZ
+  base_epoch: 1736121600
+
+# Topology: router → switch → agg → sinks
+Seg_Router:
+  type: NetworkSegment
+  segment_type: router
+  subnet: "TestNet"
+  hop_depth: 2
+  hop_latency_ms: 0.8
+  jitter_ms: 0.1
+  loss_rate: 0.0
+  Seg_Switch: ~
+
+Seg_Switch:
+  type: NetworkSegment
+  segment_type: switch
+  subnet: "TestNet"
+  hop_depth: 1
+  hop_latency_ms: 0.01
+  jitter_ms: 0.002
+  loss_rate: 0.0
+  SubnetAgg: ~
+
+SubnetAgg:
+  type: SubnetAggregator
+  subnet_name: TestNet
+  subnet_cidr: "10.0.5.0/24"
+  link_capacity_bps: 100000.0
+  bandwidth_profiles:
+    - day_type: BIZ
+      hour: 0
+      mean_bps: 80000.0
+      p95_bps: 160000.0
+      max_bps: 200000.0
+  ExternalSink: "dst_ip failed_reg '^10\\.'"
+  InternalSink: "dst_ip starts_with 10."
+
+# Traffic generator with mixed internal/external destinations
+SubnetProfile:
+  type: SubnetTrafficProfile
+  subnet_name: TestNet
+  subnet_cidr: "10.0.5.0/24"
+  device_count: 5
+  initial_ttl: 64
+  start_node_active: true
+  profiles:
+    BIZ_0:
+      aggregate_flow_rate: 0.5
+      duration_log_mean: 1.7
+      duration_log_variance: 0.6
+  destinations:
+    BIZ_0:
+      - ip: "8.8.8.8"
+        port: 443
+        protocol: tcp
+        weight: 0.35
+        qos_class: AF
+      - ip: "1.1.1.1"
+        port: 53
+        protocol: udp
+        weight: 0.30
+        qos_class: BE
+      - ip: "10.0.5.99"
+        port: 445
+        protocol: tcp
+        weight: 0.35
+        qos_class: AF
+  bytes_profiles:
+    "8.8.8.8":
+      bytes_log_mean: 7.5
+      bytes_log_variance: 1.2
+      packets_log_mean: 3.0
+      packets_log_variance: 0.6
+      response_ratio: 4.5
+      rtt_ms_mean: 25.0
+      rtt_ms_variance: 30.0
+    "1.1.1.1":
+      bytes_log_mean: 5.5
+      bytes_log_variance: 0.5
+      packets_log_mean: 1.5
+      packets_log_variance: 0.3
+      response_ratio: 1.2
+      rtt_ms_mean: 11.0
+      rtt_ms_variance: 6.0
+    "10.0.5.99":
+      bytes_log_mean: 6.0
+      bytes_log_variance: 0.8
+      packets_log_mean: 2.0
+      packets_log_variance: 0.4
+      response_ratio: 2.0
+      rtt_ms_mean: 1.0
+      rtt_ms_variance: 0.5
+  Seg_Router: ~
+
+# Two sinks — predicate routing at SubnetAgg splits by dst_ip
+ExternalSink:
+  type: FlowRecordSink
+  output_file: /tmp/angler_predicate_test/external_flows.csv
+
+InternalSink:
+  type: FlowRecordSink
+  output_file: /tmp/angler_predicate_test/internal_flows.csv
