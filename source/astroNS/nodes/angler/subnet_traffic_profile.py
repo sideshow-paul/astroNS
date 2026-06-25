@@ -152,6 +152,16 @@ class SubnetTrafficProfile(BaseNode):
         global_seed = int(configuration.get("seed", 42))
         self.rng = random.Random(f"{global_seed}_{name}")
 
+        # Pre-select a fixed pool of active host IPs from the CIDR.
+        # Without this, _sample_source_ip draws from the entire range and
+        # over an 8-hour sim every IP in a /24 appears at least once,
+        # inflating device counts to 254 regardless of device_count.
+        cidr_size = self._ip_last - self._ip_first + 1
+        pool_size = min(self.device_count, cidr_size)
+        all_ips = list(range(self._ip_first, self._ip_last + 1))
+        self.rng.shuffle(all_ips)
+        self._ip_pool = all_ips[:pool_size]
+
         # Pre-compute active hours
         self.active_hours = set()
         for key in self.profiles:
@@ -165,8 +175,8 @@ class SubnetTrafficProfile(BaseNode):
         self.env.process(self.run())
 
     def _sample_source_ip(self) -> str:
-        """Sample a random host IP from the subnet CIDR range."""
-        ip_int = self.rng.randint(self._ip_first, self._ip_last)
+        """Sample a random host IP from the pre-selected active device pool."""
+        ip_int = self.rng.choice(self._ip_pool)
         return int_to_ip(ip_int)
 
     def _pick_destination(self, hour: int) -> Optional[Dict]:
