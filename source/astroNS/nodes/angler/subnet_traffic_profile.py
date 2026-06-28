@@ -162,15 +162,17 @@ class SubnetTrafficProfile(BaseNode):
         self.rng.shuffle(all_ips)
         self._ip_pool = all_ips[:pool_size]
 
-        # Pre-compute active hours
+        # Pre-compute active hours (only hours with non-zero flow rate)
         self.active_hours = set()
-        for key in self.profiles:
-            parts = key.rsplit("_", 1)
-            if len(parts) == 2:
-                try:
-                    self.active_hours.add(int(parts[1]))
-                except ValueError:
-                    pass
+        for key, prof in self.profiles.items():
+            rate = prof.get("aggregate_flow_rate", 0) or 0
+            if rate > 0:
+                parts = key.rsplit("_", 1)
+                if len(parts) == 2:
+                    try:
+                        self.active_hours.add(int(parts[1]))
+                    except ValueError:
+                        pass
 
         self.env.process(self.run())
 
@@ -291,7 +293,12 @@ class SubnetTrafficProfile(BaseNode):
             key = f"{self.day_type}_{hour}"
             profile = self.profiles.get(key)
 
-            if not profile:
+            # Treat zero-rate profiles as inactive (no profile).
+            aggregate_flow_rate = 0
+            if profile:
+                aggregate_flow_rate = profile.get("aggregate_flow_rate", 0) or 0
+
+            if not profile or aggregate_flow_rate <= 0:
                 next_active = self._find_next_active_time(current_time)
                 if next_active is None:
                     yield BaseNode.stop_signal, 0.0, [
@@ -313,9 +320,6 @@ class SubnetTrafficProfile(BaseNode):
                 }
                 yield skip_delay, 0.0, [placeholder]
                 continue
-
-            # Sample interarrival from Exponential (Poisson process)
-            aggregate_flow_rate = profile.get("aggregate_flow_rate", 1.0) or 1.0
             interarrival = self.rng.expovariate(aggregate_flow_rate)
             # Clamp: minimum 0.01 second, maximum 1 hour
             interarrival = max(0.01, min(interarrival, 3600.0))
