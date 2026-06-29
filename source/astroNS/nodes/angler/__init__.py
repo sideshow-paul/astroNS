@@ -18,3 +18,4 @@ from .flow_record_sink import FlowRecordSink
 from .subnet_traffic_profile import SubnetTrafficProfile
 from .traffic_matrix_sink import TrafficMatrixSink
 from .site_gateway import SiteGateway
+from .data_center_endpoint import DataCenterEndpoint
