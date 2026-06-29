@@ -17,3 +17,4 @@ from .zeek_dhcp_log_sink import ZeekDhcpLogSink
 from .flow_record_sink import FlowRecordSink
 from .subnet_traffic_profile import SubnetTrafficProfile
 from .traffic_matrix_sink import TrafficMatrixSink
+from .site_gateway import SiteGateway

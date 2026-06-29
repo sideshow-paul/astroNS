@@ -1,0 +1,175 @@
+# Test model for SiteGateway — verifies provider classification,
+# uplink bandwidth constraint, and predicate routing to per-provider
+# WAN links.
+#
+# Topology:
+#   SubnetProfile -> Router -> Switch -> SubnetAgg -> SiteGateway
+#                                                        |
+#                                              +---------+---------+
+#                                              |         |         |
+#                                        WAN_AWS   WAN_Google  WAN_Other
+#                                              |         |         |
+#                                           ConnSink  ConnSink  ConnSink
+#
+# Expected: flows to 52.x (AWS prefix) go to aws_conn.log,
+#           flows to 142.250.x (Google) go to google_conn.log,
+#           everything else goes to other_conn.log.
+
+DEFAULT:
+  msg_size_key: bytes
+  seed: 42
+  sim_hours: 1
+  day_type: BIZ
+  base_epoch: 1736121600
+
+# Sink per provider — lets us verify routing
+ConnSink_AWS:
+  type: ZeekConnLogSink
+  output_file: sim-output/gateway_test/aws_conn.log
+
+ConnSink_Google:
+  type: ZeekConnLogSink
+  output_file: sim-output/gateway_test/google_conn.log
+
+ConnSink_Other:
+  type: ZeekConnLogSink
+  output_file: sim-output/gateway_test/other_conn.log
+
+# WAN links with provider-appropriate RTT
+WAN_AWS:
+  type: NetworkSegment
+  segment_type: wan
+  subnet: TestSubnet
+  hop_depth: 4
+  hop_latency_ms: 14.0
+  jitter_ms: 3.0
+  loss_rate: 0.0
+  ConnSink_AWS: ~
+
+WAN_Google:
+  type: NetworkSegment
+  segment_type: wan
+  subnet: TestSubnet
+  hop_depth: 4
+  hop_latency_ms: 20.0
+  jitter_ms: 4.0
+  loss_rate: 0.0
+  ConnSink_Google: ~
+
+WAN_Other:
+  type: NetworkSegment
+  segment_type: wan
+  subnet: TestSubnet
+  hop_depth: 4
+  hop_latency_ms: 30.0
+  jitter_ms: 5.0
+  loss_rate: 0.0
+  ConnSink_Other: ~
+
+# Site gateway with provider prefix classification
+SiteGateway_Test:
+  type: SiteGateway
+  site_id: test-site
+  uplink_capacity_bps: 1000000000
+  provider_prefixes:
+    AWS: ["3.", "13.", "15.", "34.", "52.", "54."]
+    Google: ["8.8.", "64.233", "142.250", "172.217"]
+  WAN_AWS: "dc_provider == AWS"
+  WAN_Google: "dc_provider == Google"
+  WAN_Other: "dc_provider == Other"
+
+# Subnet aggregator -> gateway
+SubnetAgg_Test:
+  type: SubnetAggregator
+  subnet_name: TestSubnet
+  subnet_cidr: "10.0.1.0/24"
+  link_capacity_bps: 100000000.0
+  bandwidth_profiles:
+    - day_type: BIZ
+      hour: 0
+      mean_bps: 40000000.0
+      p95_bps: 80000000.0
+      max_bps: 100000000.0
+  SiteGateway_Test: ~
+
+# Network segments
+Seg_Router_Test:
+  type: NetworkSegment
+  segment_type: router
+  subnet: TestSubnet
+  hop_depth: 2
+  hop_latency_ms: 0.8
+  jitter_ms: 0.1
+  loss_rate: 0.0
+  Seg_Switch_Test: ~
+
+Seg_Switch_Test:
+  type: NetworkSegment
+  segment_type: switch
+  subnet: TestSubnet
+  hop_depth: 1
+  hop_latency_ms: 0.01
+  jitter_ms: 0.002
+  loss_rate: 0.0
+  port_count: 48
+  uplink_ports: 2
+  capacity_bps: 1000000000
+  SubnetAgg_Test: ~
+
+# Traffic profile with destinations spanning AWS, Google, and Other
+SubnetProfile_Test:
+  type: SubnetTrafficProfile
+  subnet_name: TestSubnet
+  subnet_cidr: "10.0.1.0/24"
+  device_count: 10
+  initial_ttl: 128
+  start_hour: 8
+  start_node_active: true
+  profiles:
+    BIZ_8:
+      aggregate_flow_rate: 2.0
+      duration_log_mean: 1.7
+      duration_log_variance: 0.6
+  destinations:
+    BIZ_8:
+      - ip: "52.94.237.74"
+        port: 443
+        protocol: tcp
+        weight: 0.35
+        qos_class: AF
+      - ip: "142.250.80.46"
+        port: 443
+        protocol: tcp
+        weight: 0.35
+        qos_class: AF
+      - ip: "151.101.1.69"
+        port: 443
+        protocol: tcp
+        weight: 0.30
+        qos_class: BE
+  bytes_profiles:
+    "52.94.237.74":
+      bytes_log_mean: 9.0
+      bytes_log_variance: 1.5
+      packets_log_mean: 4.5
+      packets_log_variance: 0.9
+      response_ratio: 4.0
+      rtt_ms_mean: 14.0
+      rtt_ms_variance: 8.0
+    "142.250.80.46":
+      bytes_log_mean: 8.5
+      bytes_log_variance: 1.5
+      packets_log_mean: 4.0
+      packets_log_variance: 0.8
+      response_ratio: 3.5
+      rtt_ms_mean: 20.0
+      rtt_ms_variance: 10.0
+    "151.101.1.69":
+      bytes_log_mean: 8.0
+      bytes_log_variance: 1.2
+      packets_log_mean: 3.5
+      packets_log_variance: 0.7
+      response_ratio: 3.0
+      rtt_ms_mean: 30.0
+      rtt_ms_variance: 15.0
+  Seg_Router_Test: ~
