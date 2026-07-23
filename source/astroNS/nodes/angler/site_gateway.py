@@ -13,11 +13,19 @@ delay is applied (same M/M/1 model as SubnetAggregator).
 Provider classification uses IP prefix matching against the same
 prefix lists used by ``sim-fleet/rtt_histogram.py``.
 
+Time-windowed capacity constraints enable what-if uplink scenarios
+(e.g. ISP reroute through a backup path): inside a constraint window
+the window's ``capacity_bps`` replaces ``uplink_capacity_bps``.
+
 YAML usage:
     SiteGateway_TX:
       type: SiteGateway
       site_id: angler-tx
       uplink_capacity_bps: 1000000000
+      constraint_windows:
+        - start_hour: 13
+          end_hour: 16
+          capacity_bps: 100000000
       provider_prefixes:
         AWS: ["3.", "13.", "15.", "34.", "52.", "54."]
         Google: ["8.8.", "64.233", "142.250", "172.217"]
@@ -29,6 +37,7 @@ YAML usage:
 """
 from simpy.core import Environment
 from nodes.core.base import BaseNode
+from nodes.angler.hour_windows import active_window
 from typing import Dict, Any, List, Optional
 from collections import defaultdict
 
@@ -44,6 +53,12 @@ class SiteGateway(BaseNode):
         self.site_id: str = configuration.get("site_id", "unknown")
         self.uplink_capacity_bps: float = float(
             configuration.get("uplink_capacity_bps", 1_000_000_000)
+        )
+
+        # What-if constraint windows: [{start_hour, end_hour,
+        # capacity_bps}, ...]. Empty = constant capacity.
+        self.constraint_windows: List[Dict] = (
+            configuration.get("constraint_windows") or []
         )
 
         # Build provider prefix lookup from configuration.
@@ -96,16 +111,27 @@ class SiteGateway(BaseNode):
         "BE": {"service_time_ms": 1.5,  "max_delay_ms": 500.0, "onset": 0.30},
     }
 
+    def _current_capacity_bps(self) -> float:
+        """Effective uplink capacity, honoring any active constraint window."""
+        if self.constraint_windows:
+            window = active_window(
+                self.env.now, self.start_hour, self.constraint_windows
+            )
+            if window is not None:
+                return float(window.get("capacity_bps", self.uplink_capacity_bps))
+        return self.uplink_capacity_bps
+
     def _calculate_uplink_delay(self, flow_bytes: int, qos_class: str) -> float:
         """Calculate ISP uplink queuing delay using M/M/1 approximation."""
-        if self.uplink_capacity_bps <= 0:
+        capacity_bps = self._current_capacity_bps()
+        if capacity_bps <= 0:
             return 0.0
 
         params = self._QOS_PARAMS.get(qos_class, self._QOS_PARAMS["BE"])
 
         self._reset_second_if_needed()
         self._second_bytes += flow_bytes
-        rho = (self._second_bytes * 8) / self.uplink_capacity_bps
+        rho = (self._second_bytes * 8) / capacity_bps
 
         if rho < params["onset"]:
             return 0.0

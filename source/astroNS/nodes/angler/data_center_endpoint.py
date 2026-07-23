@@ -32,6 +32,7 @@ import random
 
 from simpy.core import Environment
 from nodes.core.base import BaseNode
+from nodes.angler.hour_windows import active_window
 from typing import Dict, Any, List, Optional
 from collections import defaultdict
 
@@ -78,19 +79,9 @@ class DataCenterEndpoint(BaseNode):
 
     def _get_availability(self) -> float:
         """Get current availability based on simulation hour and outage windows."""
-        hour = (int(self.env.now / 3600) + self.start_hour) % 24
-
-        for window in self.outage_windows:
-            start = window.get("start_hour", 0)
-            end = window.get("end_hour", 0)
-            # Handle windows that wrap midnight (e.g., 22 to 2)
-            if start <= end:
-                if start <= hour < end:
-                    return float(window.get("availability", 0.0))
-            else:
-                if hour >= start or hour < end:
-                    return float(window.get("availability", 0.0))
-
+        window = active_window(self.env.now, self.start_hour, self.outage_windows)
+        if window is not None:
+            return float(window.get("availability", 0.0))
         return self.default_availability
 
     def _reset_second_if_needed(self):

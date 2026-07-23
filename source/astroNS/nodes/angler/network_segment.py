@@ -17,6 +17,10 @@ segment.
 Packet loss is modeled by yielding an empty data_out_list, which causes
 BaseNode.run()'s inner loop to skip without sending output.
 
+Time-windowed degradation enables what-if WAN scenarios: inside a
+degrade window, hop latency and jitter are multiplied and loss_rate
+is overridden; outside, base values apply.
+
 YAML usage:
     Seg_10_0_1_0_24_hop3:
       type: NetworkSegment
@@ -30,6 +34,22 @@ YAML usage:
         - "10.0.1.30"
         - "10.0.1.31"
       SubnetAgg_IoT: ~
+
+    WAN_to_AWS:
+      type: NetworkSegment
+      segment_type: wan
+      subnet: "WAN"
+      hop_depth: 4
+      hop_latency_ms: 14.0
+      jitter_ms: 2.1
+      loss_rate: 0.001
+      start_hour: 8
+      degrade_windows:
+        - start_hour: 12
+          end_hour: 16
+          latency_multiplier: 3.0
+          loss_rate: 0.05
+      DC_AWS: ~
 
     Switch_10_0_1_0_24_0:
       type: NetworkSegment
@@ -49,6 +69,7 @@ import random
 
 from simpy.core import Environment
 from nodes.core.base import BaseNode
+from nodes.angler.hour_windows import active_window
 from typing import Dict, Any, List
 
 
@@ -68,6 +89,11 @@ class NetworkSegment(BaseNode):
         self.hop_latency_ms: float = float(configuration.get("hop_latency_ms", 0.5))
         self.jitter_ms: float = float(configuration.get("jitter_ms", 0.0))
         self.loss_rate: float = float(configuration.get("loss_rate", 0.0))
+
+        # What-if degrade windows: [{start_hour, end_hour,
+        # latency_multiplier, loss_rate}, ...]. Empty = no windowing.
+        self.degrade_windows: List[Dict] = configuration.get("degrade_windows") or []
+        self.start_hour: int = int(configuration.get("start_hour", 0))
 
         # Switch-specific: congestion from oversubscription
         self.capacity_bps: float = float(configuration.get("capacity_bps", 0))
@@ -156,8 +182,23 @@ class NetworkSegment(BaseNode):
                 )
                 self.total_bytes += flow_bytes
 
+                # Resolve active degrade window (what-if scenarios)
+                base_latency_ms = self.hop_latency_ms
+                jitter_ms = self.jitter_ms
+                loss_rate = self.loss_rate
+                if self.degrade_windows:
+                    window = active_window(
+                        self.env.now, self.start_hour, self.degrade_windows
+                    )
+                    if window is not None:
+                        mult = float(window.get("latency_multiplier", 1.0))
+                        base_latency_ms *= mult
+                        jitter_ms *= mult
+                        if window.get("loss_rate") is not None:
+                            loss_rate = float(window["loss_rate"])
+
                 # Packet loss check
-                if self.loss_rate > 0 and self.rng.random() < self.loss_rate:
+                if loss_rate > 0 and self.rng.random() < loss_rate:
                     self.total_dropped += 1
                     data_out_list = []  # dropped — empty output
                     processing_time = 0.0
@@ -169,9 +210,9 @@ class NetworkSegment(BaseNode):
                     continue
 
                 # Base hop latency + jitter
-                latency_ms = self.hop_latency_ms
-                if self.jitter_ms > 0:
-                    latency_ms += self.rng.gauss(0, self.jitter_ms)
+                latency_ms = base_latency_ms
+                if jitter_ms > 0:
+                    latency_ms += self.rng.gauss(0, jitter_ms)
                     latency_ms = max(0.001, latency_ms)
 
                 # Add congestion delay for switches with capacity limits
